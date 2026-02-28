@@ -1,0 +1,81 @@
+# Sync repository to Hugging Face Space
+# Pushes frontend build to HF Space repo on pushes to main
+name: HF Space Sync
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-to-hf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build frontend
+        run: |
+          cd frontend && npm ci && npm run build
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_API_KEY }}
+          HF_SPACE_REPO: ${{ secrets.HF_SPACE_REPO_URL }}
+        run: |
+          # Configure git for HF push
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+          # Clone HF Space repo (or init)
+          if [ -n "$HF_SPACE_REPO" ] && [ -n "$HF_TOKEN" ]; then
+            git clone "https://huggingface.co/spaces/${HF_SPACE_REPO}" /tmp/hf-space || \
+              mkdir -p /tmp/hf-space
+
+            # Prepare HF Space README header
+            cat > /tmp/hf-space/README.md << 'EOF'
+          ---
+          title: Sentinel LLM Misuse Detector
+          emoji: 🛡️
+          colorFrom: red
+          colorTo: blue
+          sdk: static
+          pinned: false
+          ---
+
+          # Sentinel - LLM Misuse Detection System
+
+          This Space hosts the frontend of the Sentinel system for detecting
+          misuse of Large Language Models in information operations.
+          EOF
+
+            # Copy frontend build
+            cp -r frontend/out/* /tmp/hf-space/ 2>/dev/null || \
+              cp -r frontend/.next/static /tmp/hf-space/ 2>/dev/null || true
+
+            # Push to HF
+            cd /tmp/hf-space
+            git add .
+            git commit -m "Sync from GitHub $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
+            git push "https://USER:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_REPO}" main || \
+              echo "HF push failed - check HF_SPACE_REPO_URL and HF_API_KEY secrets"
+          else
+            echo "HF secrets not configured, skipping sync"
+            echo "Set HF_API_KEY and HF_SPACE_REPO_URL in repository secrets"
+          fi
+
+      # NOTES:
+      # - For Git LFS: large files (>10MB) should use git-lfs.
+      #   Install with: git lfs install && git lfs track "*.bin" "*.h5" "*.safetensors"
+      # - HF_SPACE_REPO_URL should be in format: "username/space-name"
+      # - HF_API_KEY is your Hugging Face access token with write permissions

@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/* LLM Sentinel – vibrant design tokens */
+:root {
+  /* Primary palette: coral → tangerine → citrus */
+  --sentinel-coral: #FF6B6B;
+  --sentinel-tangerine: #FF8E53;
+  --sentinel-citrus: #FFC837;
+  --sentinel-teal: #00BFA6;
+  --sentinel-indigo: #5C6BC0;
+  --sentinel-magenta: #E040FB;
+
+  /* Surfaces */
+  --background: #FAFAFA;
+  --foreground: #1A1A2E;
+  --card-bg: #FFFFFF;
+  --card-border: #E8E8E8;
+  --muted: #6B7280;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+[data-theme="dark"] {
+  --background: #0F0F1A;
+  --foreground: #F0F0F0;
+  --card-bg: #1A1A2E;
+  --card-border: #2A2A3E;
+  --muted: #9CA3AF;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth scroll reveal animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--sentinel-coral), var(--sentinel-tangerine), var(--sentinel-citrus));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* CTA button animation */
+.cta-button {
+  background: linear-gradient(135deg, var(--sentinel-coral), var(--sentinel-tangerine));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cta-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.35);
+}
+.cta-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Score bar */
+.score-bar {
+  transition: width 0.8s ease-out;
+}
+
+/* Card hover */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
