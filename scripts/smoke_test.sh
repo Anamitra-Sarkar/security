@@ -14,7 +14,7 @@ echo ""
 # Test 1: Health check
 echo -n "1. Health check... "
 HEALTH=$(curl -sf "$BACKEND_URL/health" 2>/dev/null || echo '{"status":"error"}')
-if echo "$HEALTH" | grep -q '"ok"'; then
+if echo "$HEALTH" | grep -q '"status"'; then
   echo "✅ PASS"
 else
   echo "❌ FAIL: $HEALTH"

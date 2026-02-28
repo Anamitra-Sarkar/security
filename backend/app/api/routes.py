@@ -107,7 +107,7 @@ async def _analyze_text(text: str, user_id: str = None, session: AsyncSession = 
     if session:
         db_result = AnalysisResult(
             user_id=user_id,
-            input_text=text[:10000],
+            input_text=text[:10000],  # Truncated to 10k chars for DB storage
             text_hash=text_hash,
             p_ai=p_ai,
             s_perp=s_perp,

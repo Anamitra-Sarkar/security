@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # CORS
-    CORS_ORIGINS: str = "http://localhost:3000,https://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000"
 
     # HuggingFace
     HF_API_KEY: str = ""

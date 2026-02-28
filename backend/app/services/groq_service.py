@@ -27,7 +27,10 @@ class GroqServiceError(Exception):
     retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.ConnectError)),
 )
 async def _groq_chat_completion(text: str) -> dict:
-    """Call Groq chat completion with logprobs enabled."""
+    """Call Groq chat completion with logprobs enabled.
+    Note: Input is truncated to 2000 chars for cost control. Perplexity
+    scores for longer texts reflect only the first 2000 characters.
+    """
     headers = {
         "Authorization": f"Bearer {settings.GROQ_API_KEY}",
         "Content-Type": "application/json",
@@ -36,7 +39,7 @@ async def _groq_chat_completion(text: str) -> dict:
         "model": settings.GROQ_MODEL,
         "messages": [
             {"role": "system", "content": "Repeat the following text exactly:"},
-            {"role": "user", "content": text[:2000]},  # Limit to 2000 chars for cost
+            {"role": "user", "content": text[:2000]},  # Truncated for cost control
         ],
         "max_tokens": 1,
         "temperature": 0,
