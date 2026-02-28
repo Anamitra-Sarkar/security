@@ -3,7 +3,7 @@
  * Vibrant gradient design, scroll-reveal animations, cursor-follow parallax.
  */
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 
 interface LandingProps {
   onTryNow: () => void;
@@ -11,12 +11,7 @@ interface LandingProps {
 
 export default function Landing({ onTryNow }: LandingProps) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [visible, setVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setVisible(true);
-  }, []);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (heroRef.current) {
@@ -61,11 +56,7 @@ export default function Landing({ onTryNow }: LandingProps) {
         aria-hidden="true"
       />
 
-      <div
-        className={`text-center z-10 transition-all duration-700 ${
-          visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
-      >
+      <div className="text-center z-10 animate-fade-in-up">
         <h1 className="text-6xl md:text-8xl font-bold text-white mb-6 tracking-tight">
           Sentinel
         </h1>
@@ -86,9 +77,8 @@ export default function Landing({ onTryNow }: LandingProps) {
         </button>
 
         <div
-          className={`mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto px-4 transition-all duration-1000 delay-300 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto px-4 animate-fade-in-up"
+          style={{ animationDelay: "0.35s", animationFillMode: "both" }}
         >
           {[
             { title: "5 Detection Signals", desc: "AI generation, perplexity, embeddings, harm, stylometry" },
