@@ -92,3 +92,18 @@ body {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
+
+/* Theme toggle button – appearance controlled by CSS, no React state needed */
+.theme-toggle {
+  background: #FFFFFF;
+  color: #5C6BC0;
+}
+[data-theme="dark"] .theme-toggle {
+  background: #2A2A3E;
+  color: #FFC837;
+}
+/* Sun icon shown in dark mode; moon icon shown in light mode */
+.theme-sun { display: none; }
+.theme-moon { display: block; }
+[data-theme="dark"] .theme-sun { display: block; }
+[data-theme="dark"] .theme-moon { display: none; }
