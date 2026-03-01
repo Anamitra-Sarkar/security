@@ -153,7 +153,7 @@ export default function Landing({ onTryNow }: LandingProps) {
         onMouseMove={handleMouseMove}
         className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg,#1E40AF 0%,#1D4ED8 30%,#0369A1 60%,#059669 100%)",
+          background: "linear-gradient(135deg,#2563EB 0%,#3B82F6 30%,#0EA5E9 60%,#059669 100%)",
         }}
         aria-label="Zynera hero"
       >

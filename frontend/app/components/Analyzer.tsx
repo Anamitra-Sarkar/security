@@ -1,7 +1,7 @@
 /**
  * Zynera Analyzer – main analysis interface.
  * Blue + green gradient background, RobotAnimator on the right of the input,
- * results with explainability panels.
+ * results with explainability panels and AI Fixer tab.
  */
 "use client";
 import { useState, useRef } from "react";
@@ -97,6 +97,11 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
   const [error, setError] = useState<string | null>(null);
   const [showExplain, setShowExplain] = useState(false);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
+  const [activeTab, setActiveTab] = useState<"results" | "fixer">("results");
+  const [assistLoading, setAssistLoading] = useState(false);
+  const [assistLogs, setAssistLogs] = useState<string[]>([]);
+  const [assistFixed, setAssistFixed] = useState<string | null>(null);
+  const [assistError, setAssistError] = useState<string | null>(null);
   const inputAreaRef = useRef<HTMLDivElement>(null);
 
   const handleAnalyze = async () => {
@@ -107,6 +112,10 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
     setRobotState("loading");
     setError(null);
     setResult(null);
+    setActiveTab("results");
+    setAssistFixed(null);
+    setAssistLogs([]);
+    setAssistError(null);
     try {
       const res = await fetch(`${API_BASE}/api/analyze`, {
         method: "POST",
@@ -127,6 +136,33 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
     }
   };
 
+  const handleAssist = async () => {
+    if (!result) return;
+    setAssistLoading(true);
+    setAssistError(null);
+    setAssistFixed(null);
+    setAssistLogs(["Sending text to AI Fixer…"]);
+    try {
+      const res = await fetch(`${API_BASE}/api/assist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, threat_score: result.threat_score }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || `Error ${res.status}`);
+      }
+      const data: { fixed_text: string; request_logs: string[] } = await res.json();
+      setAssistLogs(data.request_logs);
+      setAssistFixed(data.fixed_text);
+    } catch (e: unknown) {
+      setAssistError(e instanceof Error ? e.message : "AI Fixer failed");
+      setAssistLogs([]);
+    } finally {
+      setAssistLoading(false);
+    }
+  };
+
   return (
     <div
       className="min-h-screen py-8 px-4"
@@ -143,7 +179,7 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
             <img src="/logo.svg" alt="Zynera" className="h-8" />
             <button
               onClick={onBack}
-              className="px-4 py-2 rounded-xl border text-sm font-medium transition hover:shadow-md"
+              className="px-4 py-2 rounded-xl border text-sm font-medium transition hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               style={{ borderColor: "var(--card-border)", color: "var(--foreground)" }}
               aria-label="Back to Zynera landing page"
             >
@@ -161,7 +197,7 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
         {/* Input area + Robot */}
         <div
           ref={inputAreaRef}
-          className="relative rounded-2xl p-6 mb-6 card-hover"
+          className="relative rounded-2xl p-6 mb-6 card-hover overflow-visible"
           style={{
             background: "var(--card-bg)",
             border: "1px solid var(--card-border)",
@@ -216,7 +252,13 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
           {/* Robot – positioned to the right of the input card, vertically centred */}
           <div
             className="hidden md:block absolute"
-            style={{ right: "-5rem", top: "50%", transform: "translateY(-50%)", width: "120px", pointerEvents: "none" }}
+            style={{
+              right: "-5.5rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: "130px",
+              pointerEvents: "none",
+            }}
             aria-hidden={robotState === "idle"}
           >
             <RobotAnimator state={robotState} aria-label="Zynera robot assistant status" />
@@ -254,74 +296,188 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
                 boxShadow: "var(--shadow-md)",
               }}
             >
-              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-                <h2 className="text-2xl font-bold">Results</h2>
-                <ThreatBadge score={result.threat_score} />
+              {/* Tab switcher */}
+              <div
+                className="flex gap-2 mb-6 border-b pb-3"
+                style={{ borderColor: "var(--card-border)" }}
+                role="tablist"
+                aria-label="Results tabs"
+              >
+                <button
+                  role="tab"
+                  aria-selected={activeTab === "results"}
+                  onClick={() => setActiveTab("results")}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                  style={{
+                    background: activeTab === "results" ? "linear-gradient(135deg,#1E40AF,#10B981)" : "transparent",
+                    color: activeTab === "results" ? "white" : "var(--muted)",
+                    border: activeTab === "results" ? "none" : "1px solid var(--card-border)",
+                  }}
+                >
+                  Results
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={activeTab === "fixer"}
+                  onClick={() => setActiveTab("fixer")}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                  style={{
+                    background: activeTab === "fixer" ? "linear-gradient(135deg,#1E40AF,#10B981)" : "transparent",
+                    color: activeTab === "fixer" ? "white" : "var(--muted)",
+                    border: activeTab === "fixer" ? "none" : "1px solid var(--card-border)",
+                  }}
+                >
+                  ✨ AI Fixer
+                </button>
               </div>
 
-              {/* Signal scores */}
-              {result.signals && (
-                <div className="mb-6">
-                  <h3 className="font-semibold mb-4">Signal Scores</h3>
-                  {Object.entries(result.signals).map(([key, val]) =>
-                    val !== null && val !== undefined ? (
-                      <ScoreBar
-                        key={key}
-                        value={val}
-                        color={signalColors[key] || "#3B82F6"}
-                        label={signalLabels[key] || key}
-                      />
-                    ) : null
+              {/* Results tab */}
+              {activeTab === "results" && (
+                <div role="tabpanel">
+                  <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                    <h2 className="text-2xl font-bold">Results</h2>
+                    <ThreatBadge score={result.threat_score} />
+                  </div>
+
+                  {/* Signal scores */}
+                  {result.signals && (
+                    <div className="mb-6">
+                      <h3 className="font-semibold mb-4">Signal Scores</h3>
+                      {Object.entries(result.signals).map(([key, val]) =>
+                        val !== null && val !== undefined ? (
+                          <ScoreBar
+                            key={key}
+                            value={val}
+                            color={signalColors[key] || "#3B82F6"}
+                            label={signalLabels[key] || key}
+                          />
+                        ) : null
+                      )}
+                    </div>
+                  )}
+
+                  {result.processing_time_ms && (
+                    <p className="text-sm" style={{ color: "var(--muted)" }}>
+                      Processed in {result.processing_time_ms} ms
+                    </p>
+                  )}
+
+                  {result.explainability && result.explainability.length > 0 && (
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setShowExplain(!showExplain)}
+                        className="text-sm font-semibold px-4 py-2 rounded-xl text-white transition hover:-translate-y-0.5"
+                        style={{ background: "linear-gradient(135deg,#1E40AF,#10B981)" }}
+                        aria-expanded={showExplain}
+                        aria-controls="explainability-panel"
+                      >
+                        {showExplain ? "Hide" : "Show"} Explainability
+                      </button>
+                      {showExplain && (
+                        <div
+                          id="explainability-panel"
+                          className="mt-4 rounded-xl p-4 space-y-3"
+                          style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}
+                          role="region"
+                          aria-label="Signal explainability breakdown"
+                        >
+                          {result.explainability.map((item, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center justify-between p-3 rounded-xl"
+                              style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
+                            >
+                              <div>
+                                <span className="font-medium">{signalLabels[item.signal] || item.signal}</span>
+                                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                                  {item.description}
+                                </p>
+                              </div>
+                              <div className="text-right ml-4">
+                                <div className="font-mono font-bold">{Math.round(item.value * 100)}%</div>
+                                <div className="text-xs" style={{ color: "var(--muted)" }}>
+                                  w={item.weight} → {item.contribution > 0 ? "+" : ""}
+                                  {(item.contribution * 100).toFixed(1)}%
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
 
-              {result.processing_time_ms && (
-                <p className="text-sm" style={{ color: "var(--muted)" }}>
-                  Processed in {result.processing_time_ms} ms
-                </p>
-              )}
-
-              {result.explainability && result.explainability.length > 0 && (
-                <div className="mt-4">
-                  <button
-                    onClick={() => setShowExplain(!showExplain)}
-                    className="text-sm font-semibold px-4 py-2 rounded-xl text-white transition hover:-translate-y-0.5"
-                    style={{ background: "linear-gradient(135deg,#1E40AF,#10B981)" }}
-                    aria-expanded={showExplain}
-                    aria-controls="explainability-panel"
-                  >
-                    {showExplain ? "Hide" : "Show"} Explainability
-                  </button>
-                  {showExplain && (
-                    <div
-                      id="explainability-panel"
-                      className="mt-4 rounded-xl p-4 space-y-3"
-                      style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}
-                      role="region"
-                      aria-label="Signal explainability breakdown"
+              {/* AI Fixer tab */}
+              {activeTab === "fixer" && (
+                <div role="tabpanel">
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <h2 className="text-2xl font-bold">AI Fixer</h2>
+                    <button
+                      onClick={handleAssist}
+                      disabled={assistLoading}
+                      className="cta-button text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      aria-label="Ask AI to rewrite the text"
                     >
-                      {result.explainability.map((item, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between p-3 rounded-xl"
-                          style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
-                        >
-                          <div>
-                            <span className="font-medium">{signalLabels[item.signal] || item.signal}</span>
-                            <p className="text-xs" style={{ color: "var(--muted)" }}>
-                              {item.description}
-                            </p>
-                          </div>
-                          <div className="text-right ml-4">
-                            <div className="font-mono font-bold">{Math.round(item.value * 100)}%</div>
-                            <div className="text-xs" style={{ color: "var(--muted)" }}>
-                              w={item.weight} → {item.contribution > 0 ? "+" : ""}
-                              {(item.contribution * 100).toFixed(1)}%
-                            </div>
-                          </div>
-                        </div>
+                      {assistLoading ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                          </svg>
+                          Fixing…
+                        </span>
+                      ) : assistFixed ? "Try again" : "Fix with AI →"}
+                    </button>
+                  </div>
+                  <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
+                    Ask the Groq AI to rewrite the text to reduce AI-generated patterns. Review the
+                    proposed rewrite before applying it — your original text is unchanged until you copy it.
+                  </p>
+
+                  {assistError && (
+                    <div
+                      className="rounded-xl p-3 mb-4 border"
+                      style={{ borderColor: "#DC2626", background: "rgba(220,38,38,0.06)" }}
+                      role="alert"
+                    >
+                      <p className="text-sm font-medium" style={{ color: "#DC2626" }}>⚠ {assistError}</p>
+                    </div>
+                  )}
+
+                  {assistLogs.length > 0 && (
+                    <div
+                      className="rounded-xl p-3 mb-4 text-xs font-mono space-y-1"
+                      style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}
+                      aria-label="AI thinking log"
+                    >
+                      <p className="font-semibold text-xs mb-2" style={{ color: "var(--muted)" }}>
+                        AI thinks…
+                      </p>
+                      {assistLogs.map((log, i) => (
+                        <p key={i} style={{ color: "var(--muted)" }}>▸ {log}</p>
                       ))}
+                    </div>
+                  )}
+
+                  {assistFixed && (
+                    <div>
+                      <h3 className="font-semibold mb-2 text-sm">Proposed rewrite:</h3>
+                      <div
+                        className="rounded-xl p-4 text-sm leading-relaxed whitespace-pre-wrap"
+                        style={{
+                          background: "var(--background)",
+                          border: "1px solid var(--card-border)",
+                          color: "var(--foreground)",
+                        }}
+                        aria-label="AI proposed rewrite"
+                      >
+                        {assistFixed}
+                      </div>
+                      <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
+                        Copy the rewrite above to apply it. Your original text is not modified.
+                      </p>
                     </div>
                   )}
                 </div>

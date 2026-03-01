@@ -43,3 +43,13 @@ class AnalyzeResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str = "ok"
     version: str = "1.0.0"
+
+
+class AssistRequest(BaseModel):
+    text: str = Field(..., min_length=10, max_length=50000, description="Text to rewrite/fix")
+    threat_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Threat score from analysis")
+
+
+class AssistResponse(BaseModel):
+    fixed_text: str
+    request_logs: List[str]

@@ -118,8 +118,109 @@ class TestAnalyzeEndpoint:
         assert response.status_code == 422
 
 
-class TestAttackSimulations:
+class TestAssistEndpoint:
+    def test_assist_no_api_key_returns_503(self, client):
+        """When GROQ_API_KEY is not set, /api/assist should return 503."""
+        from backend.app.core import config
+        original = config.settings.GROQ_API_KEY
+        try:
+            config.settings.GROQ_API_KEY = ""
+            response = client.post(
+                "/api/assist",
+                json={"text": "This is a test text that needs to be fixed by the AI assistant."},
+            )
+            assert response.status_code == 503
+            assert "GROQ_API_KEY" in response.json()["detail"]
+        finally:
+            config.settings.GROQ_API_KEY = original
 
+    @patch("backend.app.api.routes.check_rate_limit", new_callable=AsyncMock, return_value=True)
+    @patch("backend.app.api.routes.httpx.AsyncClient")
+    def test_assist_returns_fixed_text(self, mock_http_cls, mock_rate, client):
+        """When Groq API responds, /api/assist should return fixed_text and logs."""
+        from backend.app.core import config
+        original = config.settings.GROQ_API_KEY
+        try:
+            config.settings.GROQ_API_KEY = "test-groq-key"
+            # Set up mock response
+            mock_response = MagicMock()
+            mock_response.json.return_value = {
+                "choices": [{"message": {"content": "This is the improved text."}}]
+            }
+            mock_response.raise_for_status = MagicMock()
+            mock_http_instance = MagicMock()
+            mock_http_instance.__aenter__ = AsyncMock(return_value=mock_http_instance)
+            mock_http_instance.__aexit__ = AsyncMock(return_value=False)
+            mock_http_instance.post = AsyncMock(return_value=mock_response)
+            mock_http_cls.return_value = mock_http_instance
+
+            response = client.post(
+                "/api/assist",
+                json={"text": "This is a test text that needs to be fixed by the AI assistant."},
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert data["fixed_text"] == "This is the improved text."
+            assert isinstance(data["request_logs"], list)
+            assert len(data["request_logs"]) > 0
+        finally:
+            config.settings.GROQ_API_KEY = original
+
+    @patch("backend.app.api.routes.check_rate_limit", new_callable=AsyncMock, return_value=False)
+    def test_assist_rate_limited(self, mock_rate, client):
+        """When rate limit is exceeded, /api/assist should return 429."""
+        from backend.app.core import config
+        original = config.settings.GROQ_API_KEY
+        try:
+            config.settings.GROQ_API_KEY = "test-groq-key"
+            response = client.post(
+                "/api/assist",
+                json={"text": "This is a test text that needs to be fixed."},
+            )
+            assert response.status_code == 429
+        finally:
+            config.settings.GROQ_API_KEY = original
+
+
+class TestFirestoreRefreshError:
+    """Verify RefreshError is logged at DEBUG, not WARNING."""
+
+    @pytest.mark.asyncio
+    async def test_save_document_refresh_error_returns_false(self):
+        """RefreshError in save_document should return False without raising."""
+        import google.auth.exceptions
+        from unittest.mock import MagicMock, patch
+
+        mock_db = MagicMock()
+        mock_db.collection.return_value.document.return_value.set.side_effect = (
+            google.auth.exceptions.RefreshError("invalid_grant: Invalid JWT Signature")
+        )
+
+        with patch("backend.app.db.firestore._enabled", True), \
+             patch("backend.app.db.firestore._db", mock_db):
+            from backend.app.db.firestore import save_document
+            result = await save_document("test_col", "test_doc", {"key": "value"})
+            assert result is False
+
+    @pytest.mark.asyncio
+    async def test_get_document_refresh_error_returns_none(self):
+        """RefreshError in get_document should return None without raising."""
+        import google.auth.exceptions
+        from unittest.mock import MagicMock, patch
+
+        mock_db = MagicMock()
+        mock_db.collection.return_value.document.return_value.get.side_effect = (
+            google.auth.exceptions.RefreshError("invalid_grant: Invalid JWT Signature")
+        )
+
+        with patch("backend.app.db.firestore._enabled", True), \
+             patch("backend.app.db.firestore._db", mock_db):
+            from backend.app.db.firestore import get_document
+            result = await get_document("test_col", "test_doc")
+            assert result is None
+
+
+class TestAttackSimulations:
     @patch("backend.app.api.routes.check_rate_limit", new_callable=AsyncMock, return_value=True)
     @patch("backend.app.api.routes.detect_ai_text", new_callable=AsyncMock, return_value=0.95)
     @patch("backend.app.api.routes.compute_perplexity", new_callable=AsyncMock, return_value=0.8)
