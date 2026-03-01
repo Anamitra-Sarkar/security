@@ -53,9 +53,14 @@ def init_firebase() -> None:
         cred_dict = _fix_private_key(cred_dict)
         _credentials = sa.Credentials.from_service_account_info(cred_dict, scopes=_SCOPES)
         _project_id = settings.FIREBASE_PROJECT_ID or cred_dict.get("project_id", "")
+        # Validate credentials once at startup to avoid repeated runtime failures.
+        req = ga_requests.Request()
+        _credentials.refresh(req)
         _enabled = True
         logger.info("Firebase REST client initialised", project=_project_id)
     except Exception as e:
+        _credentials = None
+        _enabled = False
         logger.warning("Firebase init failed – Firestore disabled", error=str(e))
 
 

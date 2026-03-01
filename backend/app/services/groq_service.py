@@ -1,30 +1,25 @@
-"""
-Groq API client for perplexity scoring.
-Uses llama-3.1-8b-instant which supports logprobs (70b does NOT on free tier).
+"""Groq API client for optional perplexity scoring."""
 
-Env vars: GROQ_API_KEY, GROQ_BASE_URL
-"""
+from __future__ import annotations
+
 import math
-import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from typing import Optional
+
+import httpx
 
 from backend.app.core.config import settings
 from backend.app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
-# llama-3.1-8b-instant supports logprobs; llama-3.3-70b-versatile does NOT
+_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 _LOGPROBS_MODEL = "llama-3.1-8b-instant"
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=15),
-    retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.ConnectError)),
-)
-async def _groq_chat_completion(text: str) -> dict:
+async def _groq_chat_completion(text: str) -> Optional[dict]:
+    if not settings.GROQ_API_KEY:
+        return None
+
     headers = {
         "Authorization": f"Bearer {settings.GROQ_API_KEY}",
         "Content-Type": "application/json",
@@ -43,17 +38,21 @@ async def _groq_chat_completion(text: str) -> dict:
             json=payload,
             headers=headers,
         )
+        # 4xx means unsupported model/params for this key-tier; do not spam retries.
+        if 400 <= resp.status_code < 500:
+            logger.info("Groq perplexity unavailable for current deployment", status_code=resp.status_code)
+            return None
         resp.raise_for_status()
         return resp.json()
 
 
 async def compute_perplexity(text: str) -> Optional[float]:
-    """
-    Compute a normalized perplexity score (0-1) using Groq logprobs.
-    Higher = more anomalous. Returns None on failure (non-fatal).
-    """
+    """Compute a normalized perplexity score (0-1). Returns None on failure."""
     try:
         result = await _groq_chat_completion(text)
+        if not result:
+            return None
+
         choices = result.get("choices", [])
         if not choices:
             return None
