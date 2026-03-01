@@ -3,7 +3,7 @@ FastAPI main application entry point.
 Configures CORS, secure headers, routes, and observability.
 
 Auth: Firebase Auth (frontend issues ID tokens; backend verifies via firebase-admin)
-DB:   Firestore (via firebase-admin)
+DB:   Firestore (via firebase-admin SDK)
 
 Env vars: All from core/config.py
 Run: uvicorn backend.app.main:app --host 0.0.0.0 --port 7860
@@ -38,20 +38,7 @@ REQUEST_LATENCY = Histogram("http_request_duration_seconds", "Request latency", 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting LLM Misuse Detection API")
-    try:
-        init_firebase()
-        logger.info("Firebase + Firestore initialised")
-    except Exception as e:
-        err = str(e)
-        if "Expecting value" in err or "line 1 column 1" in err:
-            logger.warning(
-                "Firebase init failed – FIREBASE_CREDENTIALS_JSON is set but contains invalid JSON. "
-                "Make sure you pasted the full service account JSON contents (not the filename). "
-                "Auth and DB will be unavailable.",
-                error=err,
-            )
-        else:
-            logger.warning("Firebase init failed – auth and DB will be unavailable", error=err)
+    init_firebase()
     yield
     logger.info("Shutting down")
 

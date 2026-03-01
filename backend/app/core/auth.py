@@ -2,7 +2,10 @@
 Firebase Authentication utilities.
 Verifies Firebase ID tokens issued by the frontend (Firebase Auth SDK).
 
-Env vars: FIREBASE_PROJECT_ID (used implicitly by firebase-admin)
+Requires firebase-admin to be initialised first (done in main.py lifespan
+via backend.app.db.firestore.init_firebase).
+
+Env vars: FIREBASE_CREDENTIALS_JSON, FIREBASE_PROJECT_ID
 """
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
