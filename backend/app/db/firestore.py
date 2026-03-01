@@ -1,13 +1,13 @@
 """
 Firebase Admin SDK initialisation and Firestore client.
 
-Priority for credentials (in order):
-  1. FIREBASE_CREDENTIALS_JSON env var  – JSON string of the service account
-     (paste the whole file contents as a single escaped string in Render/CI)
-  2. GOOGLE_APPLICATION_CREDENTIALS env var – path to the JSON file on disk
-     (recommended for local development)
+Fixes:
+  - Handles escaped newlines in private_key when FIREBASE_CREDENTIALS_JSON
+    is pasted as a single-line string (\\n must become \n for JWT signing).
 
-Call `get_db()` anywhere to obtain the Firestore async client.
+Priority for credentials:
+  1. FIREBASE_CREDENTIALS_JSON env var (JSON string, production)
+  2. GOOGLE_APPLICATION_CREDENTIALS env var (path to file, local dev)
 """
 import json
 import os
@@ -16,9 +16,24 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 
 from backend.app.core.config import settings
+from backend.app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 _app: firebase_admin.App | None = None
 _db = None
+
+
+def _fix_private_key(cred_dict: dict) -> dict:
+    """
+    When a service account JSON is pasted as a single-line env var, the
+    private_key newlines get double-escaped as \\n instead of \n.
+    This causes 'Invalid JWT Signature' errors at runtime.
+    Fix: replace literal \\n with real newline in private_key only.
+    """
+    if "private_key" in cred_dict:
+        cred_dict["private_key"] = cred_dict["private_key"].replace("\\n", "\n")
+    return cred_dict
 
 
 def init_firebase() -> None:
@@ -28,11 +43,10 @@ def init_firebase() -> None:
         return
 
     if settings.FIREBASE_CREDENTIALS_JSON:
-        # Credentials supplied as a JSON string (production / Render)
         cred_dict = json.loads(settings.FIREBASE_CREDENTIALS_JSON)
+        cred_dict = _fix_private_key(cred_dict)
         cred = credentials.Certificate(cred_dict)
     elif os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-        # Path to JSON file on disk (local dev)
         cred = credentials.ApplicationDefault()
     else:
         raise RuntimeError(
@@ -45,10 +59,10 @@ def init_firebase() -> None:
         {"projectId": settings.FIREBASE_PROJECT_ID},
     )
     _db = firestore.client()
+    logger.info("Firebase Admin SDK initialised", project=settings.FIREBASE_PROJECT_ID)
 
 
 def get_db():
-    """Return the Firestore client. Call init_firebase() first."""
     if _db is None:
         raise RuntimeError("Firestore not initialised. Call init_firebase() on startup.")
     return _db
