@@ -16,6 +16,26 @@ env:
   NODE_VERSION: "20"
 
 jobs:
+  # Compute HF backend URL once and share across deploy/smoke jobs
+  compute-hf-url:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      backend_url: ${{ steps.url.outputs.backend_url }}
+    steps:
+      - name: Derive HF Spaces backend URL
+        id: url
+        env:
+          HF_BACKEND_SPACE: ${{ secrets.HF_BACKEND_SPACE_REPO }}
+        run: |
+          # "Owner/space-name" -> "https://owner-space-name.hf.space"
+          if [ -n "$HF_BACKEND_SPACE" ]; then
+            HF_SLUG=$(echo "$HF_BACKEND_SPACE" | tr 'A-Z' 'a-z' | tr '/' '-' | tr '_' '-')
+            echo "backend_url=https://${HF_SLUG}.hf.space" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend_url=" >> "$GITHUB_OUTPUT"
+          fi
+
   # Backend: lint and test
   backend-test:
     runs-on: ubuntu-latest
@@ -59,46 +79,103 @@ jobs:
       - name: Build
         run: cd frontend && npm run build
 
-  # Deploy backend to Render (on push to main only)
+  # Deploy backend to Hugging Face Spaces (on push to main only)
   deploy-backend:
-    needs: [backend-test]
+    needs: [backend-test, compute-hf-url]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Render
+      - uses: actions/checkout@v4
+
+      - name: Deploy backend Docker to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_API_KEY }}
+          HF_BACKEND_SPACE: ${{ secrets.HF_BACKEND_SPACE_REPO }}
         run: |
-          curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{}' || echo "Render deploy triggered (or service not configured)"
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+          if [ -n "$HF_BACKEND_SPACE" ] && [ -n "$HF_TOKEN" ]; then
+            git clone "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_BACKEND_SPACE}" /tmp/hf-backend || \
+              mkdir -p /tmp/hf-backend && git -C /tmp/hf-backend init
+
+            cat > /tmp/hf-backend/README.md << 'EOF'
+          ---
+          title: Sentinel Backend API
+          emoji: 🔒
+          colorFrom: blue
+          colorTo: red
+          sdk: docker
+          pinned: false
+          app_port: 7860
+          ---
+          # Sentinel Backend API
+          FastAPI backend exposing the LLM misuse detection REST API on port 7860.
+          EOF
+
+            cp Dockerfile.hf_space /tmp/hf-backend/Dockerfile
+            cp -r backend/ /tmp/hf-backend/backend/
+            cp alembic.ini /tmp/hf-backend/
+
+            cd /tmp/hf-backend
+            git add .
+            git commit -m "Deploy from GitHub ${GITHUB_SHA}" || true
+            git push "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_BACKEND_SPACE}" main || \
+              echo "HF backend push failed - check HF_BACKEND_SPACE_REPO and HF_API_KEY secrets"
+          else
+            echo "HF backend secrets not configured, skipping backend deploy"
+            echo "Set HF_API_KEY and HF_BACKEND_SPACE_REPO in repository secrets"
+          fi
 
   # Deploy frontend to Vercel (on push to main only)
   deploy-frontend:
-    needs: [frontend-build]
+    needs: [frontend-build, compute-hf-url]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Deploy to Vercel
+        env:
+          BACKEND_URL: ${{ needs.compute-hf-url.outputs.backend_url }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           cd frontend
-          npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} || echo "Vercel deploy triggered (or token not configured)"
+          if [ -n "$VERCEL_TOKEN" ]; then
+            npx vercel --prod --token="$VERCEL_TOKEN" \
+              --build-env NEXT_PUBLIC_API_URL="$BACKEND_URL" || \
+              echo "Vercel deploy failed - check VERCEL_TOKEN secret"
+          else
+            echo "VERCEL_TOKEN not configured, skipping Vercel deploy"
+          fi
 
   # Smoke tests (after deploy)
   smoke-test:
-    needs: [deploy-backend, deploy-frontend]
+    needs: [deploy-backend, deploy-frontend, compute-hf-url]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Smoke test - API health
+        env:
+          BACKEND_URL: ${{ needs.compute-hf-url.outputs.backend_url }}
         run: |
-          curl -sf https://sentinel-api.onrender.com/health || echo "API health check (configure URL)"
+          if [ -n "$BACKEND_URL" ]; then
+            curl -sf "${BACKEND_URL}/health" || echo "API health check failed (Space may still be starting)"
+          else
+            echo "HF_BACKEND_SPACE_REPO not configured, skipping smoke test"
+          fi
 
       - name: Smoke test - Analyze endpoint
+        env:
+          BACKEND_URL: ${{ needs.compute-hf-url.outputs.backend_url }}
         run: |
-          curl -sf -X POST https://sentinel-api.onrender.com/api/analyze \
-            -H "Content-Type: application/json" \
-            -d '{"text": "This is a smoke test for the LLM misuse detection system."}' || echo "Analyze endpoint check (configure URL)"
+          if [ -n "$BACKEND_URL" ]; then
+            curl -sf -X POST "${BACKEND_URL}/api/analyze" \
+              -H "Content-Type: application/json" \
+              -d '{"text": "This is a smoke test for the LLM misuse detection system."}' || \
+              echo "Analyze endpoint check failed (Space may still be starting)"
+          else
+            echo "HF_BACKEND_SPACE_REPO not configured, skipping smoke test"
+          fi
