@@ -82,7 +82,11 @@ function ThreatBadge({ score }: { score: number }) {
   );
 }
 
-export default function Analyzer() {
+interface AnalyzerProps {
+  onBack: () => void;
+}
+
+export default function Analyzer({ onBack }: AnalyzerProps) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -125,11 +129,23 @@ export default function Analyzer() {
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <header className="text-center mb-8 animate-fade-in-up">
+        <header className="mb-8 animate-fade-in-up">
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={onBack}
+              className="px-4 py-2 rounded-lg border text-sm font-medium"
+              style={{ borderColor: "var(--card-border)", color: "var(--foreground)" }}
+              aria-label="Back to landing page"
+            >
+              ← Back
+            </button>
+          </div>
+          <div className="text-center">
           <h1 className="text-4xl font-bold gradient-text mb-2">Sentinel Analyzer</h1>
           <p style={{ color: "var(--muted)" }}>
             Paste text below to analyze for LLM misuse indicators
           </p>
+                  </div>
         </header>
 
         {/* Input area */}

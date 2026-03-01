@@ -26,10 +26,10 @@ class Settings(BaseSettings):
 
     # HuggingFace
     HF_API_KEY: str = ""
-    HF_DETECTOR_PRIMARY: str = f"{_HF_ROUTER}/roberta-base-openai-detector"
-    HF_DETECTOR_FALLBACK: str = f"{_HF_ROUTER}/Hello-SimpleAI/chatgpt-detector-roberta"
-    HF_EMBEDDINGS_PRIMARY: str = f"{_HF_ROUTER}/sentence-transformers/all-MiniLM-L6-v2"
-    HF_EMBEDDINGS_FALLBACK: str = f"{_HF_ROUTER}/sentence-transformers/paraphrase-MiniLM-L3-v2"
+    HF_DETECTOR_PRIMARY: str = f"{_HF_ROUTER}/Hello-SimpleAI/chatgpt-detector-roberta"
+    HF_DETECTOR_FALLBACK: str = ""
+    HF_EMBEDDINGS_PRIMARY: str = ""
+    HF_EMBEDDINGS_FALLBACK: str = ""
     HF_HARM_CLASSIFIER: str = f"{_HF_ROUTER}/facebook/roberta-hate-speech-dynabench-r4-target"
 
     # Groq

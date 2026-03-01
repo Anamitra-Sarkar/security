@@ -14,7 +14,7 @@ export default function Home() {
     <main>
       <ThemeToggle />
       {showApp ? (
-        <Analyzer />
+        <Analyzer onBack={() => setShowApp(false)} />
       ) : (
         <Landing onTryNow={() => setShowApp(true)} />
       )}

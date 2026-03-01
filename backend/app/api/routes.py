@@ -1,31 +1,32 @@
 """
 Main API routes for the LLM Misuse Detection system.
 Endpoints: /api/analyze, /api/analyze/bulk, /api/results/{id}
-Persistence: Firestore (replaces PostgreSQL)
+Persistence: Firestore via REST helpers.
 """
 import hashlib
+import json
 import time
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from backend.app.api.models import (
-    AnalyzeRequest, AnalyzeResponse, BulkAnalyzeRequest,
-    SignalScores, ExplainabilityItem,
+    AnalyzeRequest,
+    AnalyzeResponse,
+    BulkAnalyzeRequest,
+    ExplainabilityItem,
+    SignalScores,
 )
-from backend.app.core.auth import get_current_user
 from backend.app.core.config import settings
+from backend.app.core.logging import get_logger
 from backend.app.core.redis import check_rate_limit, get_cached, set_cached
-from backend.app.db.firestore import get_db
+from backend.app.db.firestore import get_document, save_document
 from backend.app.models.schemas import AnalysisResult
 from backend.app.services.ensemble import compute_ensemble
-from backend.app.services.hf_service import detect_ai_text, get_embeddings, detect_harm
 from backend.app.services.groq_service import compute_perplexity
+from backend.app.services.hf_service import detect_ai_text, detect_harm, get_embeddings
 from backend.app.services.stylometry import compute_stylometry_score
 from backend.app.services.vector_db import compute_cluster_score, upsert_embedding
-from backend.app.core.logging import get_logger
-
-import json
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api", tags=["analysis"])
@@ -33,28 +34,24 @@ router = APIRouter(prefix="/api", tags=["analysis"])
 COLLECTION = "analysis_results"
 
 
-async def _analyze_text(text: str, user_id: str = None) -> dict:
+async def _analyze_text(text: str, user_id: str | None = None) -> dict:
     """Core analysis pipeline for a single text."""
     start_time = time.time()
     text_hash = hashlib.sha256(text.encode()).hexdigest()
 
-    # Check cache
     cached = await get_cached(f"analysis:{text_hash}")
     if cached:
         return json.loads(cached)
 
-    # Step 1: AI detection
     try:
         p_ai = await detect_ai_text(text)
     except Exception:
         p_ai = None
 
-    # Step 2: Perplexity (cost-gated)
     s_perp = None
     if p_ai is not None and p_ai > settings.PERPLEXITY_THRESHOLD:
         s_perp = await compute_perplexity(text)
 
-    # Step 3: Embeddings + cluster score
     s_embed_cluster = None
     try:
         embeddings = await get_embeddings(text)
@@ -63,16 +60,10 @@ async def _analyze_text(text: str, user_id: str = None) -> dict:
     except Exception:
         pass
 
-    # Step 4: Harm/extremism
     p_ext = await detect_harm(text)
-
-    # Step 5: Stylometry
     s_styl = compute_stylometry_score(text)
-
-    # Step 6: Watermark placeholder
     p_watermark = None
 
-    # Step 7: Ensemble
     ensemble_result = compute_ensemble(
         p_ai=p_ai,
         s_perp=s_perp,
@@ -97,15 +88,12 @@ async def _analyze_text(text: str, user_id: str = None) -> dict:
         "processing_time_ms": processing_time_ms,
     }
 
-    # Cache
     try:
         await set_cached(f"analysis:{text_hash}", json.dumps(result), ttl=600)
     except Exception:
         pass
 
-    # Persist to Firestore
     try:
-        db = get_db()
         doc = AnalysisResult(
             input_text=text,
             text_hash=text_hash,
@@ -122,8 +110,8 @@ async def _analyze_text(text: str, user_id: str = None) -> dict:
             completed_at=datetime.now(timezone.utc),
             processing_time_ms=processing_time_ms,
         )
-        db.collection(COLLECTION).document(doc.id).set(doc.to_dict())
-        result["id"] = doc.id
+        saved = await save_document(COLLECTION, doc.id, doc.to_dict())
+        result["id"] = doc.id if saved else text_hash
     except Exception as e:
         logger.warning("Firestore persist failed", error=str(e))
         result["id"] = text_hash
@@ -152,9 +140,7 @@ async def analyze_text(request: AnalyzeRequest):
             s_styl=result["s_styl"],
             p_watermark=result["p_watermark"],
         ),
-        explainability=[
-            ExplainabilityItem(**e) for e in result["explainability"]
-        ],
+        explainability=[ExplainabilityItem(**e) for e in result["explainability"]],
         processing_time_ms=result["processing_time_ms"],
     )
 
@@ -176,21 +162,16 @@ async def bulk_analyze(request: BulkAnalyzeRequest):
     return {"results": results}
 
 
-@router.get("/results/{result_id}")
-async def get_result(
-    result_id: str,
-    user_id: str = Depends(get_current_user),
-):
+@router.get("/results/{result_id}", response_model=AnalyzeResponse)
+async def get_result(result_id: str):
     """Fetch a previously computed analysis result by Firestore document ID."""
-    db = get_db()
-    doc_ref = db.collection(COLLECTION).document(result_id)
-    doc = doc_ref.get()
-    if not doc.exists:
+    data = await get_document(COLLECTION, result_id)
+    if not data:
         raise HTTPException(status_code=404, detail="Result not found")
-    data = doc.to_dict()
+
     return AnalyzeResponse(
         id=data["id"],
-        status=data["status"],
+        status=data.get("status", "done"),
         threat_score=data.get("threat_score"),
         signals=SignalScores(
             p_ai=data.get("p_ai"),
@@ -200,8 +181,6 @@ async def get_result(
             s_styl=data.get("s_styl"),
             p_watermark=data.get("p_watermark"),
         ),
-        explainability=[
-            ExplainabilityItem(**e) for e in (data.get("explainability") or [])
-        ],
+        explainability=[ExplainabilityItem(**e) for e in (data.get("explainability") or [])],
         processing_time_ms=data.get("processing_time_ms"),
     )
