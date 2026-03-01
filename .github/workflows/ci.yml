@@ -1,5 +1,8 @@
-# CI/CD Pipeline: tests, build, deploy
-# Runs on PRs and pushes to main
+# CI/CD Pipeline
+# - Runs tests and build on every PR and push to main
+# - Deploys backend to Hugging Face Spaces Docker on push to main
+# - Deploys frontend to Vercel on push to main
+# - Runs smoke tests after deploy
 name: CI/CD
 
 on:
@@ -16,7 +19,7 @@ env:
   NODE_VERSION: "20"
 
 jobs:
-  # Compute HF backend URL once and share across deploy/smoke jobs
+  # ── Derive the HF Spaces backend URL once ──────────────────────────────────
   compute-hf-url:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
         env:
           HF_BACKEND_SPACE: ${{ secrets.HF_BACKEND_SPACE_REPO }}
         run: |
-          # "Owner/space-name" -> "https://owner-space-name.hf.space"
+          # "Owner/space-name" → "https://owner-space-name.hf.space"
           if [ -n "$HF_BACKEND_SPACE" ]; then
             HF_SLUG=$(echo "$HF_BACKEND_SPACE" | tr 'A-Z' 'a-z' | tr '/' '-' | tr '_' '-')
             echo "backend_url=https://${HF_SLUG}.hf.space" >> "$GITHUB_OUTPUT"
@@ -36,13 +39,13 @@ jobs:
             echo "backend_url=" >> "$GITHUB_OUTPUT"
           fi
 
-  # Backend: lint and test
+  # ── Backend: lint + test ────────────────────────────────────────────────────
   backend-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -54,16 +57,17 @@ jobs:
       - name: Run tests
         run: python -m pytest backend/tests/ -v --ignore=backend/tests/test_load.py
         env:
-          DATABASE_URL: "sqlite+aiosqlite:///test.db"
+          # Firebase not needed for unit tests; just needs to be set
+          FIREBASE_PROJECT_ID: "test-project"
           REDIS_URL: "redis://localhost:6379/0"
 
-  # Frontend: lint and build
+  # ── Frontend: lint + build ──────────────────────────────────────────────────
   frontend-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -78,8 +82,14 @@ jobs:
 
       - name: Build
         run: cd frontend && npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:7860' }}
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
 
-  # Deploy backend to Hugging Face Spaces (on push to main only)
+  # ── Deploy backend to Hugging Face Spaces (Docker) ─────────────────────────
   deploy-backend:
     needs: [backend-test, compute-hf-url]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -87,7 +97,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy backend Docker to Hugging Face Space
+      - name: Push backend Docker to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_API_KEY }}
           HF_BACKEND_SPACE: ${{ secrets.HF_BACKEND_SPACE_REPO }}
@@ -97,9 +107,10 @@ jobs:
 
           if [ -n "$HF_BACKEND_SPACE" ] && [ -n "$HF_TOKEN" ]; then
             git clone "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_BACKEND_SPACE}" /tmp/hf-backend || \
-              mkdir -p /tmp/hf-backend && git -C /tmp/hf-backend init
+              { mkdir -p /tmp/hf-backend && git -C /tmp/hf-backend init; }
 
-            cat > /tmp/hf-backend/README.md << 'EOF'
+            # HF Space card — sdk:docker tells HF to build the Dockerfile
+            cat > /tmp/hf-backend/README.md << 'HFEOF'
           ---
           title: Sentinel Backend API
           emoji: 🔒
@@ -109,25 +120,37 @@ jobs:
           pinned: false
           app_port: 7860
           ---
-          # Sentinel Backend API
-          FastAPI backend exposing the LLM misuse detection REST API on port 7860.
-          EOF
 
+          # Sentinel Backend API
+
+          FastAPI backend for the Sentinel LLM Misuse Detection System.
+          Exposes a REST API on port 7860.
+
+          ## Required Secrets (Space Settings → Repository secrets)
+          - `FIREBASE_PROJECT_ID` – Firebase project ID
+          - `FIREBASE_CREDENTIALS_JSON` – Service account JSON (single-line string)
+          - `REDIS_URL` – Upstash Redis URL
+          - `HF_API_KEY` – Hugging Face API token
+          - `GROQ_API_KEY` – Groq API key
+          - `CORS_ORIGINS` – Your Vercel frontend URL
+          HFEOF
+
+            # Use the HF-specific Dockerfile (port 7860, no alembic)
             cp Dockerfile.hf_space /tmp/hf-backend/Dockerfile
+
+            # Copy backend application code only
             cp -r backend/ /tmp/hf-backend/backend/
-            cp alembic.ini /tmp/hf-backend/
 
             cd /tmp/hf-backend
             git add .
-            git commit -m "Deploy from GitHub ${GITHUB_SHA}" || true
+            git commit -m "Deploy backend from GitHub ${GITHUB_SHA}" || true
             git push "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_BACKEND_SPACE}" main || \
-              echo "HF backend push failed - check HF_BACKEND_SPACE_REPO and HF_API_KEY secrets"
+              echo "HF push failed – check HF_BACKEND_SPACE_REPO and HF_API_KEY secrets"
           else
-            echo "HF backend secrets not configured, skipping backend deploy"
-            echo "Set HF_API_KEY and HF_BACKEND_SPACE_REPO in repository secrets"
+            echo "HF backend secrets not configured, skipping deploy"
           fi
 
-  # Deploy frontend to Vercel (on push to main only)
+  # ── Deploy frontend to Vercel ───────────────────────────────────────────────
   deploy-frontend:
     needs: [frontend-build, compute-hf-url]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -144,12 +167,12 @@ jobs:
           if [ -n "$VERCEL_TOKEN" ]; then
             npx vercel --prod --token="$VERCEL_TOKEN" \
               --build-env NEXT_PUBLIC_API_URL="$BACKEND_URL" || \
-              echo "Vercel deploy failed - check VERCEL_TOKEN secret"
+              echo "Vercel deploy failed – check VERCEL_TOKEN secret"
           else
             echo "VERCEL_TOKEN not configured, skipping Vercel deploy"
           fi
 
-  # Smoke tests (after deploy)
+  # ── Smoke tests ─────────────────────────────────────────────────────────────
   smoke-test:
     needs: [deploy-backend, deploy-frontend, compute-hf-url]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -157,17 +180,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Smoke test - API health
+      - name: Smoke test – /health
         env:
           BACKEND_URL: ${{ needs.compute-hf-url.outputs.backend_url }}
         run: |
           if [ -n "$BACKEND_URL" ]; then
-            curl -sf "${BACKEND_URL}/health" || echo "API health check failed (Space may still be starting)"
+            # HF Spaces can take ~60s to cold-start after a new push
+            sleep 30
+            curl -sf "${BACKEND_URL}/health" || echo "Health check failed (Space may still be cold-starting)"
           else
             echo "HF_BACKEND_SPACE_REPO not configured, skipping smoke test"
           fi
 
-      - name: Smoke test - Analyze endpoint
+      - name: Smoke test – /api/analyze
         env:
           BACKEND_URL: ${{ needs.compute-hf-url.outputs.backend_url }}
         run: |
@@ -175,7 +200,7 @@ jobs:
             curl -sf -X POST "${BACKEND_URL}/api/analyze" \
               -H "Content-Type: application/json" \
               -d '{"text": "This is a smoke test for the LLM misuse detection system."}' || \
-              echo "Analyze endpoint check failed (Space may still be starting)"
+              echo "Analyze endpoint check failed"
           else
             echo "HF_BACKEND_SPACE_REPO not configured, skipping smoke test"
           fi

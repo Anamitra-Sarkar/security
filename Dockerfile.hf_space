@@ -1,24 +1,33 @@
-# HuggingFace Spaces Docker backend
-# Exposes port 7860 (required by HF Spaces)
-# Env vars required: DATABASE_URL, REDIS_URL, HF_API_KEY, GROQ_API_KEY, JWT_SECRET
+# Hugging Face Spaces Docker – Sentinel Backend API
+# HF Spaces requires the app to listen on port 7860.
+#
+# Required Secrets (set in Space Settings -> Repository secrets):
+#   FIREBASE_PROJECT_ID        – Firebase project ID
+#   FIREBASE_CREDENTIALS_JSON  – Full service account JSON as a single-line string
+#   REDIS_URL                  – Upstash Redis URL (rediss://...)
+#   HF_API_KEY                 – Hugging Face API token
+#   GROQ_API_KEY               – Groq API key
+#   CORS_ORIGINS               – Comma-separated allowed origins (your Vercel URL)
+#   QDRANT_URL / QDRANT_API_KEY – Optional, for vector clustering signal
+#   SENTRY_DSN                 – Optional error tracking
+
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# System dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy and install Python dependencies
+# Python dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Application code
 COPY backend/ ./backend/
-COPY alembic.ini .
 
-# Non-root user for security
+# Non-root user (HF Spaces security best practice)
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
