@@ -5,7 +5,7 @@
   /* Primary palette: blue + green */
   --zynera-blue: #1E40AF;
   --zynera-blue-mid: #3B82F6;
-  --zynera-blue-light: #93C5FD;
+  --zynera-blue-light: #BFDBFE;
   --zynera-green: #059669;
   --zynera-green-mid: #10B981;
   --zynera-green-light: #6EE7B7;
@@ -20,7 +20,7 @@
   --sentinel-magenta: #E040FB;
 
   /* Surfaces */
-  --background: #F0F9FF;
+  --background: #F5FBFF;
   --foreground: #0F172A;
   --card-bg: #FFFFFF;
   --card-border: #BFDBFE;
@@ -59,12 +59,21 @@ body {
 
 /* Smooth scroll reveal animation */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(24px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+  will-change: transform, opacity;
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Gradient text */
@@ -159,6 +168,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   width: 140px;
+  overflow: visible;
   pointer-events: none;
   user-select: none;
 }

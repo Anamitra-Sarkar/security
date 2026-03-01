@@ -10,9 +10,13 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 
+import httpx
+
 from backend.app.api.models import (
     AnalyzeRequest,
     AnalyzeResponse,
+    AssistRequest,
+    AssistResponse,
     BulkAnalyzeRequest,
     ExplainabilityItem,
     SignalScores,
@@ -184,3 +188,61 @@ async def get_result(result_id: str):
         explainability=[ExplainabilityItem(**e) for e in (data.get("explainability") or [])],
         processing_time_ms=data.get("processing_time_ms"),
     )
+
+
+@router.post("/assist", response_model=AssistResponse)
+async def assist_text(request: AssistRequest):
+    """Call Groq API to propose a rewrite of flagged text to reduce AI threat indicators."""
+    if not settings.GROQ_API_KEY:
+        raise HTTPException(
+            status_code=503,
+            detail="AI Fixer is not configured: GROQ_API_KEY is missing",
+        )
+
+    rate_ok = await check_rate_limit("assist:global", limit=10)
+    if not rate_ok:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+
+    logs: list[str] = []
+    logs.append(f"Preparing rewrite request for Groq model: {settings.GROQ_MODEL}")
+
+    prompt = (
+        "You are a text editor. Rewrite the following text to sound more natural and human-authored "
+        "while preserving the original meaning and factual content. "
+        "Return only the rewritten text without any explanation or commentary.\n\n"
+        f"Original text:\n{request.text}"
+    )
+
+    try:
+        logs.append("Sending request to Groq API…")
+        async with httpx.AsyncClient(timeout=30.0) as http_client:
+            response = await http_client.post(
+                f"{settings.GROQ_BASE_URL}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": settings.GROQ_MODEL,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 8192,
+                    "temperature": 0.7,
+                },
+            )
+            response.raise_for_status()
+            data = response.json()
+            fixed_text = data["choices"][0]["message"]["content"].strip()
+            logs.append("Groq model returned rewritten text successfully.")
+    except httpx.TimeoutException:
+        logger.warning("Groq API timeout in /api/assist")
+        raise HTTPException(status_code=504, detail="AI Fixer request timed out")
+    except httpx.HTTPStatusError as e:
+        logger.warning("Groq API error in /api/assist", status_code=e.response.status_code)
+        raise HTTPException(
+            status_code=502, detail=f"AI Fixer upstream error: {e.response.status_code}"
+        )
+    except Exception as e:
+        logger.warning("Unexpected error in /api/assist", error=str(e))
+        raise HTTPException(status_code=500, detail="AI Fixer failed unexpectedly")
+
+    return AssistResponse(fixed_text=fixed_text, request_logs=logs)

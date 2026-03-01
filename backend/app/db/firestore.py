@@ -21,6 +21,7 @@ from typing import Any
 
 import firebase_admin
 from firebase_admin import credentials, firestore as fb_firestore
+import google.auth.exceptions
 
 from backend.app.core.config import settings
 from backend.app.core.logging import get_logger
@@ -74,6 +75,9 @@ async def save_document(collection: str, doc_id: str, data: dict) -> bool:
     try:
         _db.collection(collection).document(doc_id).set(data)
         return True
+    except google.auth.exceptions.RefreshError as e:
+        logger.debug("Firestore save_document skipped – credential refresh failed", collection=collection, doc_id=doc_id, error=str(e))
+        return False
     except Exception as e:
         logger.warning("Firestore save_document failed", collection=collection, doc_id=doc_id, error=str(e))
         return False
@@ -86,6 +90,9 @@ async def get_document(collection: str, doc_id: str) -> dict | None:
     try:
         doc = _db.collection(collection).document(doc_id).get()
         return doc.to_dict() if doc.exists else None
+    except google.auth.exceptions.RefreshError as e:
+        logger.debug("Firestore get_document skipped – credential refresh failed", collection=collection, doc_id=doc_id, error=str(e))
+        return None
     except Exception as e:
         logger.warning("Firestore get_document failed", collection=collection, doc_id=doc_id, error=str(e))
         return None
