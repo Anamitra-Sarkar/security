@@ -7,8 +7,7 @@ Env vars: FIREBASE_PROJECT_ID, FIREBASE_CREDENTIALS_JSON,
           SENTRY_DSN, CORS_ORIGINS
 """
 from pydantic_settings import BaseSettings
-from typing import Optional
-from typing import List
+from typing import Optional, List
 
 
 class Settings(BaseSettings):
@@ -17,20 +16,16 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Firebase
-    # Set FIREBASE_PROJECT_ID to your Firebase project ID.
-    # Set FIREBASE_CREDENTIALS_JSON to the *contents* of your service account
-    # JSON (as a single-line escaped string), OR set GOOGLE_APPLICATION_CREDENTIALS
-    # to the path of the JSON file on disk. The latter is preferred for local dev.
     FIREBASE_PROJECT_ID: str = ""
-    FIREBASE_CREDENTIALS_JSON: Optional[str] = None  # JSON string (for Render env vars)
+    FIREBASE_CREDENTIALS_JSON: Optional[str] = None
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
-    # CORS
-    CORS_ORIGINS: str = "http://localhost:3000"
+    # CORS – defaults include both production frontend and local dev
+    CORS_ORIGINS: str = "https://security-three-mu.vercel.app,http://localhost:3000"
 
-    # HuggingFace
+    # HuggingFace Inference API
     HF_API_KEY: str = ""
     HF_DETECTOR_PRIMARY: str = "https://api-inference.huggingface.co/models/desklib/ai-text-detector-v1.01"
     HF_DETECTOR_FALLBACK: str = "https://api-inference.huggingface.co/models/fakespot-ai/roberta-base-ai-text-detection-v1"
@@ -43,7 +38,7 @@ class Settings(BaseSettings):
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
 
-    # Vector DB (Qdrant)
+    # Vector DB (Qdrant Cloud)
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_API_KEY: Optional[str] = None
     QDRANT_COLLECTION: str = "sentinel_embeddings"
@@ -52,7 +47,7 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = ""
     LOG_LEVEL: str = "INFO"
 
-    # Ensemble weights (defaults)
+    # Ensemble weights
     WEIGHT_AI_DETECT: float = 0.30
     WEIGHT_PERPLEXITY: float = 0.20
     WEIGHT_EMBEDDING: float = 0.15
