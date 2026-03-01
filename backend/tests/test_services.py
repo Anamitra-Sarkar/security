@@ -24,19 +24,31 @@ class TestHFService:
     @pytest.mark.asyncio
     @patch("backend.app.services.hf_service._hf_post", new_callable=AsyncMock)
     async def test_detect_ai_text_fallback(self, mock_post):
-        """If primary fails, should try fallback."""
+        """If primary fails immediately (non-retried error), fallback URL should succeed."""
+        # Use ConnectError so tenacity does NOT retry (only HTTPStatusError/ConnectError
+        # with stop_after_attempt=3 would retry, but we want ONE failure then fallback).
+        # Actually tenacity retries on ConnectError too, so we use a plain Exception
+        # which is NOT in the retry predicate — it propagates immediately, letting
+        # detect_ai_text catch it in its try/except and move to the fallback URL.
         mock_post.side_effect = [
-            Exception("Primary failed"),
-            [[{"label": "FAKE", "score": 0.75}]],
+            Exception("Primary failed"),          # primary URL -> caught, move on
+            [[{"label": "FAKE", "score": 0.75}]], # fallback URL -> success
         ]
-        score = await detect_ai_text("Test text")
+        with patch("backend.app.services.hf_service.settings") as mock_settings:
+            mock_settings.HF_DETECTOR_PRIMARY = "https://primary.example.com"
+            mock_settings.HF_DETECTOR_FALLBACK = "https://fallback.example.com"
+            score = await detect_ai_text("Test text")
         assert 0.0 <= score <= 1.0
 
     @pytest.mark.asyncio
     @patch("backend.app.services.hf_service._hf_post", new_callable=AsyncMock)
     async def test_get_embeddings_success(self, mock_post):
+        """Mock returns a 768-dim vector; assert we get back exactly that vector."""
         mock_post.return_value = [0.1] * 768
-        result = await get_embeddings("Test text")
+        with patch("backend.app.services.hf_service.settings") as mock_settings:
+            mock_settings.HF_EMBEDDINGS_PRIMARY = "https://embeddings.example.com"
+            mock_settings.HF_EMBEDDINGS_FALLBACK = ""
+            result = await get_embeddings("Test text")
         assert len(result) == 768
 
     @pytest.mark.asyncio
