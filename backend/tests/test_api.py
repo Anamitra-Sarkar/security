@@ -9,29 +9,16 @@ from fastapi.testclient import TestClient
 
 def _make_client():
     """Build a TestClient with Firebase init and Firestore writes mocked out."""
-    # Patch firebase_admin before app is imported to prevent SDK initialisation
-    with patch("backend.app.db.firestore.firebase_admin"), \
-         patch("backend.app.db.firestore.firestore"):
+    # Patch init_firebase and the _enabled flag so the app starts without real credentials
+    with patch("backend.app.db.firestore.init_firebase"), \
+         patch("backend.app.db.firestore._enabled", True), \
+         patch("backend.app.db.firestore.save_document", new_callable=AsyncMock, return_value=True), \
+         patch("backend.app.db.firestore.get_document", new_callable=AsyncMock, return_value=None):
         from backend.app.main import app
 
-    # Mock get_db() so Firestore document writes are no-ops
-    mock_db = MagicMock()
-    mock_collection = MagicMock()
-    mock_doc_ref = MagicMock()
-    mock_db.collection.return_value = mock_collection
-    mock_collection.document.return_value = mock_doc_ref
-    mock_doc_ref.set.return_value = None
-
-    # Mock get_result Firestore read
-    mock_existing_doc = MagicMock()
-    mock_existing_doc.exists = False
-    mock_doc_ref.get.return_value = mock_existing_doc
-
     app.dependency_overrides = {}
-    with patch("backend.app.api.routes.get_db", return_value=mock_db), \
-         patch("backend.app.db.firestore.init_firebase"):
-        client = TestClient(app)
-    return client, mock_db
+    client = TestClient(app)
+    return client, None
 
 
 @pytest.fixture
@@ -65,15 +52,11 @@ class TestAnalyzeEndpoint:
     @patch("backend.app.api.routes.detect_harm", new_callable=AsyncMock, return_value=0.2)
     @patch("backend.app.api.routes.get_cached", new_callable=AsyncMock, return_value=None)
     @patch("backend.app.api.routes.set_cached", new_callable=AsyncMock)
-    @patch("backend.app.api.routes.get_db")
+    @patch("backend.app.db.firestore.save_document", new_callable=AsyncMock, return_value=True)
     def test_analyze_returns_scores(
-        self, mock_get_db, mock_set_cache, mock_get_cache, mock_harm, mock_upsert,
+        self, mock_save, mock_set_cache, mock_get_cache, mock_harm, mock_upsert,
         mock_cluster, mock_embed, mock_perp, mock_ai, mock_rate, client
     ):
-        mock_db = MagicMock()
-        mock_db.collection.return_value.document.return_value.set.return_value = None
-        mock_get_db.return_value = mock_db
-
         response = client.post(
             "/api/analyze",
             json={"text": "This is a test text that should be analyzed for potential misuse patterns."},
@@ -110,15 +93,11 @@ class TestAttackSimulations:
     @patch("backend.app.api.routes.detect_harm", new_callable=AsyncMock, return_value=0.9)
     @patch("backend.app.api.routes.get_cached", new_callable=AsyncMock, return_value=None)
     @patch("backend.app.api.routes.set_cached", new_callable=AsyncMock)
-    @patch("backend.app.api.routes.get_db")
+    @patch("backend.app.db.firestore.save_document", new_callable=AsyncMock, return_value=True)
     def test_high_threat_detection(
-        self, mock_get_db, mock_set_cache, mock_get_cache, mock_harm, mock_upsert,
+        self, mock_save, mock_set_cache, mock_get_cache, mock_harm, mock_upsert,
         mock_cluster, mock_embed, mock_perp, mock_ai, mock_rate, client
     ):
-        mock_db = MagicMock()
-        mock_db.collection.return_value.document.return_value.set.return_value = None
-        mock_get_db.return_value = mock_db
-
         response = client.post(
             "/api/analyze",
             json={"text": "Simulated high-threat content for testing purposes only. This is a test."},
@@ -135,15 +114,11 @@ class TestAttackSimulations:
     @patch("backend.app.api.routes.detect_harm", new_callable=AsyncMock, return_value=0.02)
     @patch("backend.app.api.routes.get_cached", new_callable=AsyncMock, return_value=None)
     @patch("backend.app.api.routes.set_cached", new_callable=AsyncMock)
-    @patch("backend.app.api.routes.get_db")
+    @patch("backend.app.db.firestore.save_document", new_callable=AsyncMock, return_value=True)
     def test_benign_text_low_threat(
-        self, mock_get_db, mock_set_cache, mock_get_cache, mock_harm, mock_upsert,
+        self, mock_save, mock_set_cache, mock_get_cache, mock_harm, mock_upsert,
         mock_cluster, mock_embed, mock_ai, mock_rate, client
     ):
-        mock_db = MagicMock()
-        mock_db.collection.return_value.document.return_value.set.return_value = None
-        mock_get_db.return_value = mock_db
-
         response = client.post(
             "/api/analyze",
             json={"text": "The weather today is sunny with clear skies and mild temperatures across the region."},
