@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" fill="none" role="img" aria-label="Robot and human handshake illustration" aria-hidden="true">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E40AF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#059669" stop-opacity="0.10"/>
+    </linearGradient>
+    <linearGradient id="robotBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="humanBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="handShake" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+    <filter id="softShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1E40AF" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background wash -->
+  <rect width="800" height="500" fill="url(#skyGrad)"/>
+
+  <!-- Subtle grid lines -->
+  <g stroke="#3B82F6" stroke-width="0.5" opacity="0.08">
+    <line x1="0" y1="100" x2="800" y2="100"/>
+    <line x1="0" y1="200" x2="800" y2="200"/>
+    <line x1="0" y1="300" x2="800" y2="300"/>
+    <line x1="0" y1="400" x2="800" y2="400"/>
+    <line x1="100" y1="0" x2="100" y2="500"/>
+    <line x1="200" y1="0" x2="200" y2="500"/>
+    <line x1="300" y1="0" x2="300" y2="500"/>
+    <line x1="400" y1="0" x2="400" y2="500"/>
+    <line x1="500" y1="0" x2="500" y2="500"/>
+    <line x1="600" y1="0" x2="600" y2="500"/>
+    <line x1="700" y1="0" x2="700" y2="500"/>
+  </g>
+
+  <!-- ═══ ROBOT (left side) ════════════════════════════════════════════════ -->
+  <g filter="url(#softShadow)">
+    <!-- Robot legs -->
+    <rect x="148" y="400" width="22" height="60" rx="6" fill="#1E40AF"/>
+    <rect x="188" y="400" width="22" height="60" rx="6" fill="#1E40AF"/>
+    <!-- Feet -->
+    <rect x="142" y="450" width="34" height="14" rx="5" fill="#1D4ED8"/>
+    <rect x="182" y="450" width="34" height="14" rx="5" fill="#1D4ED8"/>
+
+    <!-- Robot torso -->
+    <rect x="130" y="260" width="100" height="145" rx="16" fill="url(#robotBody)"/>
+    <!-- Chest panel -->
+    <rect x="148" y="278" width="64" height="44" rx="8" fill="#1E3A8A"/>
+    <!-- Panel lights -->
+    <circle cx="160" cy="293" r="5" fill="#38BDF8"/>
+    <circle cx="178" cy="293" r="5" fill="#34D399"/>
+    <circle cx="196" cy="293" r="5" fill="#F59E0B"/>
+    <!-- Panel bar -->
+    <rect x="153" y="308" width="54" height="7" rx="3" fill="#0EA5E9" opacity="0.7"/>
+
+    <!-- Robot left arm (reaching for handshake) -->
+    <rect x="230" y="295" width="80" height="22" rx="11" fill="#2563EB"/>
+    <!-- Robot hand -->
+    <rect x="306" y="285" width="36" height="40" rx="10" fill="#3B82F6"/>
+    <!-- Fingers -->
+    <rect x="310" y="271" width="10" height="20" rx="5" fill="#3B82F6"/>
+    <rect x="324" y="268" width="10" height="22" rx="5" fill="#3B82F6"/>
+    <rect x="338" y="271" width="8" height="18" rx="4" fill="#3B82F6"/>
+
+    <!-- Robot right arm -->
+    <rect x="50" y="295" width="80" height="22" rx="11" fill="#2563EB"/>
+
+    <!-- Robot neck -->
+    <rect x="162" y="238" width="36" height="26" rx="8" fill="#2563EB"/>
+
+    <!-- Robot head -->
+    <rect x="128" y="170" width="104" height="74" rx="18" fill="#1E40AF"/>
+    <!-- Antenna -->
+    <rect x="176" y="152" width="8" height="22" rx="4" fill="#2563EB"/>
+    <circle cx="180" cy="148" r="7" fill="#38BDF8" filter="url(#glow)"/>
+
+    <!-- Eyes -->
+    <rect x="148" y="190" width="28" height="20" rx="6" fill="#0F172A"/>
+    <rect x="184" y="190" width="28" height="20" rx="6" fill="#0F172A"/>
+    <!-- Eye glow -->
+    <ellipse cx="162" cy="200" rx="9" ry="7" fill="#38BDF8" opacity="0.9"/>
+    <ellipse cx="198" cy="200" rx="9" ry="7" fill="#38BDF8" opacity="0.9"/>
+    <!-- Pupil glint -->
+    <circle cx="166" cy="197" r="3" fill="white" opacity="0.5"/>
+    <circle cx="202" cy="197" r="3" fill="white" opacity="0.5"/>
+
+    <!-- Mouth -->
+    <rect x="155" y="220" width="50" height="8" rx="4" fill="#0F172A"/>
+    <rect x="160" y="221" width="40" height="5" rx="2" fill="#38BDF8" opacity="0.6"/>
+  </g>
+
+  <!-- ═══ HUMAN (right side) ══════════════════════════════════════════════ -->
+  <g filter="url(#softShadow)">
+    <!-- Human legs -->
+    <rect x="530" y="400" width="22" height="60" rx="6" fill="#047857"/>
+    <rect x="570" y="400" width="22" height="60" rx="6" fill="#047857"/>
+    <!-- Feet -->
+    <rect x="524" y="450" width="34" height="14" rx="5" fill="#065F46"/>
+    <rect x="564" y="450" width="34" height="14" rx="5" fill="#065F46"/>
+
+    <!-- Human torso / jacket -->
+    <rect x="510" y="260" width="100" height="145" rx="16" fill="url(#humanBody)"/>
+    <!-- Shirt / tie area -->
+    <rect x="530" y="270" width="60" height="60" rx="8" fill="#F0FDF4"/>
+    <polygon points="555,272 565,272 560,310" fill="#059669"/>
+
+    <!-- Human right arm (reaching for handshake) -->
+    <rect x="410" y="295" width="100" height="22" rx="11" fill="#047857"/>
+    <!-- Human hand -->
+    <rect x="378" y="285" width="36" height="40" rx="10" fill="#D97706"/>
+    <!-- Fingers -->
+    <rect x="378" y="271" width="10" height="20" rx="5" fill="#D97706"/>
+    <rect x="392" y="268" width="10" height="22" rx="5" fill="#D97706"/>
+    <rect x="406" y="271" width="8" height="18" rx="4" fill="#D97706"/>
+
+    <!-- Human left arm -->
+    <rect x="610" y="295" width="80" height="22" rx="11" fill="#047857"/>
+
+    <!-- Human neck -->
+    <rect x="552" y="238" width="36" height="26" rx="8" fill="#B45309"/>
+
+    <!-- Human head -->
+    <ellipse cx="570" cy="195" rx="48" ry="56" fill="#F5CBA7"/>
+    <!-- Hair -->
+    <ellipse cx="570" cy="150" rx="48" ry="22" fill="#3D2B1F"/>
+    <rect x="522" y="148" width="96" height="22" rx="0" fill="#3D2B1F"/>
+    <rect x="522" y="148" width="8" height="50" rx="4" fill="#3D2B1F"/>
+    <rect x="610" y="148" width="8" height="50" rx="4" fill="#3D2B1F"/>
+
+    <!-- Eyes -->
+    <ellipse cx="552" cy="195" rx="9" ry="10" fill="white"/>
+    <ellipse cx="588" cy="195" rx="9" ry="10" fill="white"/>
+    <circle cx="554" cy="196" r="6" fill="#3D2B1F"/>
+    <circle cx="590" cy="196" r="6" fill="#3D2B1F"/>
+    <circle cx="556" cy="193" r="2.5" fill="white" opacity="0.6"/>
+    <circle cx="592" cy="193" r="2.5" fill="white" opacity="0.6"/>
+
+    <!-- Eyebrows -->
+    <path d="M543 183 Q552 179 561 182" stroke="#3D2B1F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M579 183 Q588 179 597 182" stroke="#3D2B1F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+    <!-- Smile -->
+    <path d="M553 215 Q570 225 587 215" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- ═══ HANDSHAKE in the middle ════════════════════════════════════════ -->
+  <g filter="url(#glow)">
+    <!-- Clasped hands glow -->
+    <ellipse cx="400" cy="305" rx="46" ry="28" fill="url(#handShake)" opacity="0.3"/>
+    <!-- Handshake detail -->
+    <rect x="362" y="290" width="76" height="32" rx="12" fill="url(#handShake)" opacity="0.85"/>
+    <line x1="362" y1="306" x2="438" y2="306" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  </g>
+
+  <!-- Glow dots around handshake -->
+  <circle cx="400" cy="275" r="5" fill="#38BDF8" opacity="0.5"/>
+  <circle cx="375" cy="330" r="3.5" fill="#34D399" opacity="0.5"/>
+  <circle cx="425" cy="330" r="3.5" fill="#34D399" opacity="0.5"/>
+  <circle cx="360" cy="275" r="3" fill="#38BDF8" opacity="0.4"/>
+  <circle cx="440" cy="275" r="3" fill="#38BDF8" opacity="0.4"/>
+
+  <!-- Decorative arcs -->
+  <path d="M320 340 Q400 420 480 340" stroke="#10B981" stroke-width="1.5" fill="none" opacity="0.25" stroke-dasharray="6 4"/>
+  <path d="M300 310 Q400 400 500 310" stroke="#3B82F6" stroke-width="1" fill="none" opacity="0.18" stroke-dasharray="4 6"/>
+</svg>

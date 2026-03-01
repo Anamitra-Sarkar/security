@@ -1,4 +1,4 @@
-# Sentinel – LLM Misuse Detection System
+# Zynera – LLM Misuse Detection System
 
 A production-ready system for detecting and mitigating misuse of Large Language Models (LLMs) in malign information operations. Uses **only pretrained models** via Hugging Face Inference Endpoints and Groq Llama API — no training required.
 
@@ -78,6 +78,7 @@ Signals are combined with configurable weights:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
+| `FIRESTORE_AUTO_INIT` | Set to `false` to skip Firestore init at startup (prevents google.auth JWT errors when credentials are absent) | No (default `true`) |
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `REDIS_URL` | Redis URL (Upstash/RedisCloud) | Yes |
 | `HF_API_KEY` | Hugging Face API token | Yes |

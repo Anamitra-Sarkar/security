@@ -27,6 +27,42 @@ def client():
     return c
 
 
+class TestStartupWithoutCredentials:
+    """Verify the server starts cleanly when no GCP/Firebase credentials are present."""
+
+    def test_health_returns_200_without_firebase_credentials(self):
+        """App must start and /health must return 200 even without Firebase credentials."""
+        # Use the same safe mock pattern as _make_client() – no real credentials needed
+        c, _ = _make_client()
+        response = c.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+
+    def test_firestore_auto_init_false_skips_init(self):
+        """When FIRESTORE_AUTO_INIT is False, init_firebase must not be invoked at startup."""
+        from backend.app.main import app as _app
+        from backend.app.core import config
+
+        original = config.settings.FIRESTORE_AUTO_INIT
+        try:
+            config.settings.FIRESTORE_AUTO_INIT = False
+            with patch("backend.app.db.firestore.init_firebase") as mock_init:
+                # Simulate a lifespan startup by calling the lifespan coroutine
+                import asyncio
+                from contextlib import asynccontextmanager
+
+                async def run_lifespan():
+                    from backend.app.main import lifespan
+                    async with lifespan(_app):
+                        pass
+
+                asyncio.run(run_lifespan())
+                mock_init.assert_not_called()
+        finally:
+            config.settings.FIRESTORE_AUTO_INIT = original
+
+
 class TestHealthEndpoint:
     def test_health_check(self, client):
         response = client.get("/health")

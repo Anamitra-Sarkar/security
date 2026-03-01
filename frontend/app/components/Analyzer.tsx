@@ -1,9 +1,11 @@
 /**
- * Main analyzer application component.
- * Provides text input, results display with explainability panels.
+ * Zynera Analyzer – main analysis interface.
+ * Blue + green gradient background, RobotAnimator on the right of the input,
+ * results with explainability panels.
  */
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import RobotAnimator from "./RobotAnimator";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -43,12 +45,12 @@ const signalLabels: Record<string, string> = {
 };
 
 const signalColors: Record<string, string> = {
-  p_ai: "#FF6B6B",
-  s_perp: "#FF8E53",
-  s_embed_cluster: "#FFC837",
-  p_ext: "#E040FB",
-  s_styl: "#5C6BC0",
-  p_watermark: "#00BFA6",
+  p_ai: "#3B82F6",
+  s_perp: "#0EA5E9",
+  s_embed_cluster: "#10B981",
+  p_ext: "#059669",
+  s_styl: "#6366F1",
+  p_watermark: "#34D399",
 };
 
 function ScoreBar({ value, color, label }: { value: number; color: string; label: string }) {
@@ -60,10 +62,7 @@ function ScoreBar({ value, color, label }: { value: number; color: string; label
         <span className="font-mono font-bold">{pct}%</span>
       </div>
       <div className="w-full h-3 rounded-full" style={{ background: "var(--card-border)" }}>
-        <div
-          className="h-3 rounded-full score-bar"
-          style={{ width: `${pct}%`, background: color }}
-        />
+        <div className="h-3 rounded-full score-bar" style={{ width: `${pct}%`, background: color }} />
       </div>
     </div>
   );
@@ -71,10 +70,15 @@ function ScoreBar({ value, color, label }: { value: number; color: string; label
 
 function ThreatBadge({ score }: { score: number }) {
   const level = score > 0.7 ? "High" : score > 0.4 ? "Medium" : "Low";
-  const bg = score > 0.7 ? "#FF6B6B" : score > 0.4 ? "#FF8E53" : "#00BFA6";
+  const bg =
+    score > 0.7
+      ? "linear-gradient(135deg,#DC2626,#EF4444)"
+      : score > 0.4
+      ? "linear-gradient(135deg,#D97706,#F59E0B)"
+      : "linear-gradient(135deg,#059669,#10B981)";
   return (
     <span
-      className="inline-block px-4 py-2 rounded-full text-white font-bold text-lg"
+      className="inline-block px-4 py-2 rounded-full text-white font-bold text-base shadow-md"
       style={{ background: bg }}
     >
       {level} Threat: {Math.round(score * 100)}%
@@ -88,18 +92,19 @@ interface AnalyzerProps {
 
 export default function Analyzer({ onBack }: AnalyzerProps) {
   const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [robotState, setRobotState] = useState<"idle" | "loading" | "success">("idle");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showExplain, setShowExplain] = useState(false);
   const [history, setHistory] = useState<AnalysisResult[]>([]);
+  const inputAreaRef = useRef<HTMLDivElement>(null);
 
   const handleAnalyze = async () => {
     if (text.length < 10) {
       setError("Text must be at least 10 characters");
       return;
     }
-    setLoading(true);
+    setRobotState("loading");
     setError(null);
     setResult(null);
     try {
@@ -115,57 +120,68 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
       const data: AnalysisResult = await res.json();
       setResult(data);
       setHistory((prev) => [data, ...prev].slice(0, 10));
+      setRobotState("success");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Analysis failed");
-    } finally {
-      setLoading(false);
+      setRobotState("idle");
     }
   };
 
   return (
     <div
       className="min-h-screen py-8 px-4"
-      style={{ background: "var(--background)", color: "var(--foreground)" }}
+      style={{
+        background:
+          "linear-gradient(160deg,rgba(219,234,254,0.55) 0%,rgba(209,250,229,0.45) 100%), var(--background)",
+        color: "var(--foreground)",
+      }}
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <header className="mb-8 animate-fade-in-up">
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-6">
+            <img src="/logo.svg" alt="Zynera" className="h-8" />
             <button
               onClick={onBack}
-              className="px-4 py-2 rounded-lg border text-sm font-medium"
+              className="px-4 py-2 rounded-xl border text-sm font-medium transition hover:shadow-md"
               style={{ borderColor: "var(--card-border)", color: "var(--foreground)" }}
-              aria-label="Back to landing page"
+              aria-label="Back to Zynera landing page"
             >
               ← Back
             </button>
           </div>
           <div className="text-center">
-          <h1 className="text-4xl font-bold gradient-text mb-2">Sentinel Analyzer</h1>
-          <p style={{ color: "var(--muted)" }}>
-            Paste text below to analyze for LLM misuse indicators
-          </p>
-                  </div>
+            <h1 className="text-4xl font-bold gradient-text mb-2">Zynera Analyzer</h1>
+            <p style={{ color: "var(--muted)" }}>
+              Paste any text below to detect AI misuse, coordinated campaigns, and harmful content
+            </p>
+          </div>
         </header>
 
-        {/* Input area */}
+        {/* Input area + Robot */}
         <div
-          className="rounded-2xl p-6 mb-6 card-hover"
+          ref={inputAreaRef}
+          className="relative rounded-2xl p-6 mb-6 card-hover"
           style={{
             background: "var(--card-bg)",
             border: "1px solid var(--card-border)",
             boxShadow: "var(--shadow-md)",
+            /* extra right padding so robot doesn't overlap textarea on wider screens */
+            paddingRight: "clamp(1.5rem, 12vw, 10rem)",
           }}
         >
           <label htmlFor="analysis-input" className="block text-sm font-medium mb-2">
-            Text to analyze
+            Text to analyse
           </label>
           <textarea
             id="analysis-input"
             value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Paste text here to check for AI generation, extremism, disinformation patterns..."
-            className="w-full h-40 p-4 rounded-xl resize-none text-base focus:outline-none focus:ring-2"
+            onChange={(e) => {
+              setText(e.target.value);
+              if (robotState === "success") setRobotState("idle");
+            }}
+            placeholder="Paste text here to check for AI generation, extremism, disinformation patterns…"
+            className="w-full h-40 p-4 rounded-xl resize-none text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             style={{
               background: "var(--background)",
               border: "1px solid var(--card-border)",
@@ -179,29 +195,51 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
             </span>
             <button
               onClick={handleAnalyze}
-              disabled={loading || text.length < 10}
+              disabled={robotState === "loading" || text.length < 10}
               className="cta-button text-white font-semibold px-8 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Analyze text"
+              aria-label="Analyze text with Zynera"
             >
-              {loading ? (
+              {robotState === "loading" ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  Analyzing...
+                  Analyzing…
                 </span>
               ) : (
                 "Analyze"
               )}
             </button>
           </div>
+
+          {/* Robot – positioned to the right of the input card, vertically centred */}
+          <div
+            className="hidden md:block absolute"
+            style={{ right: "-5rem", top: "50%", transform: "translateY(-50%)", width: "120px", pointerEvents: "none" }}
+            aria-hidden={robotState === "idle"}
+          >
+            <RobotAnimator state={robotState} aria-label="Zynera robot assistant status" />
+          </div>
+        </div>
+
+        {/* Mobile robot strip */}
+        <div className="flex justify-center mb-4 md:hidden" aria-hidden={robotState === "idle"}>
+          <div style={{ width: 80 }}>
+            <RobotAnimator state={robotState} aria-label="Zynera robot assistant status" />
+          </div>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl p-4 mb-6 border" style={{ borderColor: "#FF6B6B", background: "#FF6B6B15" }}>
-            <p className="text-sm" style={{ color: "#FF6B6B" }}>{error}</p>
+          <div
+            className="rounded-xl p-4 mb-6 border"
+            style={{ borderColor: "#DC2626", background: "rgba(220,38,38,0.06)" }}
+            role="alert"
+          >
+            <p className="text-sm font-medium" style={{ color: "#DC2626" }}>
+              ⚠ {error}
+            </p>
           </div>
         )}
 
@@ -216,7 +254,7 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
                 boxShadow: "var(--shadow-md)",
               }}
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <h2 className="text-2xl font-bold">Results</h2>
                 <ThreatBadge score={result.threat_score} />
               </div>
@@ -230,7 +268,7 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
                       <ScoreBar
                         key={key}
                         value={val}
-                        color={signalColors[key] || "#999"}
+                        color={signalColors[key] || "#3B82F6"}
                         label={signalLabels[key] || key}
                       />
                     ) : null
@@ -238,20 +276,18 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
                 </div>
               )}
 
-              {/* Processing time */}
               {result.processing_time_ms && (
                 <p className="text-sm" style={{ color: "var(--muted)" }}>
-                  Processed in {result.processing_time_ms}ms
+                  Processed in {result.processing_time_ms} ms
                 </p>
               )}
 
-              {/* Explainability toggle */}
               {result.explainability && result.explainability.length > 0 && (
                 <div className="mt-4">
                   <button
                     onClick={() => setShowExplain(!showExplain)}
-                    className="text-sm font-medium px-4 py-2 rounded-lg text-white"
-                    style={{ background: "#5C6BC0" }}
+                    className="text-sm font-semibold px-4 py-2 rounded-xl text-white transition hover:-translate-y-0.5"
+                    style={{ background: "linear-gradient(135deg,#1E40AF,#10B981)" }}
                     aria-expanded={showExplain}
                     aria-controls="explainability-panel"
                   >
@@ -268,8 +304,8 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
                       {result.explainability.map((item, i) => (
                         <div
                           key={i}
-                          className="flex items-center justify-between p-3 rounded-lg"
-                          style={{ background: "var(--card-bg)" }}
+                          className="flex items-center justify-between p-3 rounded-xl"
+                          style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
                         >
                           <div>
                             <span className="font-medium">{signalLabels[item.signal] || item.signal}</span>
@@ -277,12 +313,10 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
                               {item.description}
                             </p>
                           </div>
-                          <div className="text-right">
-                            <div className="font-mono font-bold">
-                              {Math.round(item.value * 100)}%
-                            </div>
+                          <div className="text-right ml-4">
+                            <div className="font-mono font-bold">{Math.round(item.value * 100)}%</div>
                             <div className="text-xs" style={{ color: "var(--muted)" }}>
-                              Weight: {item.weight} → {item.contribution > 0 ? "+" : ""}
+                              w={item.weight} → {item.contribution > 0 ? "+" : ""}
                               {(item.contribution * 100).toFixed(1)}%
                             </div>
                           </div>
