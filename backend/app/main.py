@@ -6,12 +6,13 @@ Auth: Firebase Auth (frontend issues ID tokens; backend verifies via firebase-ad
 DB:   Firestore (via firebase-admin)
 
 Env vars: All from core/config.py
-Run: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+Run: uvicorn backend.app.main:app --host 0.0.0.0 --port 7860
 """
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 from backend.app.core.config import settings
@@ -41,7 +42,16 @@ async def lifespan(app: FastAPI):
         init_firebase()
         logger.info("Firebase + Firestore initialised")
     except Exception as e:
-        logger.warning("Firebase init failed – auth and DB will be unavailable", error=str(e))
+        err = str(e)
+        if "Expecting value" in err or "line 1 column 1" in err:
+            logger.warning(
+                "Firebase init failed – FIREBASE_CREDENTIALS_JSON is set but contains invalid JSON. "
+                "Make sure you pasted the full service account JSON contents (not the filename). "
+                "Auth and DB will be unavailable.",
+                error=err,
+            )
+        else:
+            logger.warning("Firebase init failed – auth and DB will be unavailable", error=err)
     yield
     logger.info("Shutting down")
 
@@ -87,6 +97,12 @@ async def metrics_middleware(request: Request, call_next):
 
 
 app.include_router(analysis_router)
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Root redirect – keeps HF Space health checker happy."""
+    return RedirectResponse(url="/health")
 
 
 @app.get("/health", response_model=HealthResponse)
