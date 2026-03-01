@@ -2,6 +2,9 @@
 FastAPI main application entry point.
 Configures CORS, secure headers, routes, and observability.
 
+Auth: Firebase Auth (frontend issues ID tokens; backend verifies via firebase-admin)
+DB:   Firestore (via firebase-admin)
+
 Env vars: All from core/config.py
 Run: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 """
@@ -14,9 +17,8 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 from backend.app.core.config import settings
 from backend.app.core.logging import setup_logging, get_logger
 from backend.app.api.routes import router as analysis_router
-from backend.app.api.auth_routes import router as auth_router
 from backend.app.api.models import HealthResponse
-from backend.app.db.session import init_db
+from backend.app.db.firestore import init_firebase
 
 # Sentry (optional)
 if settings.SENTRY_DSN:
@@ -36,10 +38,10 @@ REQUEST_LATENCY = Histogram("http_request_duration_seconds", "Request latency", 
 async def lifespan(app: FastAPI):
     logger.info("Starting LLM Misuse Detection API")
     try:
-        await init_db()
-        logger.info("Database initialized")
+        init_firebase()
+        logger.info("Firebase + Firestore initialised")
     except Exception as e:
-        logger.warning("DB init skipped (may not be configured)", error=str(e))
+        logger.warning("Firebase init failed – auth and DB will be unavailable", error=str(e))
     yield
     logger.info("Shutting down")
 
@@ -61,7 +63,6 @@ app.add_middleware(
 )
 
 
-# Security headers middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response: Response = await call_next(request)
@@ -74,7 +75,6 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 
-# Metrics middleware
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
     import time
@@ -86,9 +86,7 @@ async def metrics_middleware(request: Request, call_next):
     return response
 
 
-# Routes
 app.include_router(analysis_router)
-app.include_router(auth_router)
 
 
 @app.get("/health", response_model=HealthResponse)

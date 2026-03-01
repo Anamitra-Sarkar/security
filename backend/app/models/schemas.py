@@ -1,51 +1,56 @@
 """
-Database models for the LLM Misuse Detection system.
-Uses SQLAlchemy ORM with async support.
+Data models for the LLM Misuse Detection system.
+Plain dataclasses – no ORM layer (Firestore is schemaless).
 """
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from sqlalchemy import (
-    Column, String, Float, DateTime, Text, Boolean, Integer, JSON
-)
-from sqlalchemy.orm import DeclarativeBase
+from typing import Optional, Any
 import uuid
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    hashed_password = Column(String(255), nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
-
-class AnalysisResult(Base):
-    __tablename__ = "analysis_results"
-
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, nullable=True, index=True)
-    input_text = Column(Text, nullable=False)
-    text_hash = Column(String(64), nullable=False, index=True)
+@dataclass
+class AnalysisResult:
+    """Mirrors the Firestore document structure stored under 'analysis_results'."""
+    input_text: str
+    text_hash: str
 
     # Per-signal scores
-    p_ai = Column(Float, nullable=True)
-    s_perp = Column(Float, nullable=True)
-    s_embed_cluster = Column(Float, nullable=True)
-    p_ext = Column(Float, nullable=True)
-    s_styl = Column(Float, nullable=True)
-    p_watermark = Column(Float, nullable=True)
+    p_ai: Optional[float] = None
+    s_perp: Optional[float] = None
+    s_embed_cluster: Optional[float] = None
+    p_ext: Optional[float] = None
+    s_styl: Optional[float] = None
+    p_watermark: Optional[float] = None
 
     # Ensemble
-    threat_score = Column(Float, nullable=True)
-    explainability = Column(JSON, nullable=True)
+    threat_score: Optional[float] = None
+    explainability: Optional[Any] = None
 
     # Metadata
-    status = Column(String(20), default="pending")  # pending, processing, done, error
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    completed_at = Column(DateTime, nullable=True)
-    processing_time_ms = Column(Integer, nullable=True)
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: Optional[str] = None
+    status: str = "done"
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
+    processing_time_ms: Optional[int] = None
+
+    def to_dict(self) -> dict:
+        """Serialise to a plain dict suitable for Firestore."""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "input_text": self.input_text[:10000],
+            "text_hash": self.text_hash,
+            "p_ai": self.p_ai,
+            "s_perp": self.s_perp,
+            "s_embed_cluster": self.s_embed_cluster,
+            "p_ext": self.p_ext,
+            "s_styl": self.s_styl,
+            "p_watermark": self.p_watermark,
+            "threat_score": self.threat_score,
+            "explainability": self.explainability,
+            "status": self.status,
+            "created_at": self.created_at,
+            "completed_at": self.completed_at,
+            "processing_time_ms": self.processing_time_ms,
+        }

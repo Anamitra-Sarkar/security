@@ -2,11 +2,13 @@
 Configuration module for the LLM Misuse Detection backend.
 Reads all settings from environment variables.
 
-Env vars: DATABASE_URL, REDIS_URL, HF_API_KEY, GROQ_API_KEY, JWT_SECRET,
+Env vars: FIREBASE_PROJECT_ID, FIREBASE_CREDENTIALS_JSON,
+          REDIS_URL, HF_API_KEY, GROQ_API_KEY,
           SENTRY_DSN, CORS_ORIGINS
 """
 from pydantic_settings import BaseSettings
-from typing import List, Optional
+from typing import Optional
+from typing import List
 
 
 class Settings(BaseSettings):
@@ -14,16 +16,16 @@ class Settings(BaseSettings):
     APP_NAME: str = "LLM Misuse Detector"
     DEBUG: bool = False
 
-    # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/sentinel"
+    # Firebase
+    # Set FIREBASE_PROJECT_ID to your Firebase project ID.
+    # Set FIREBASE_CREDENTIALS_JSON to the *contents* of your service account
+    # JSON (as a single-line escaped string), OR set GOOGLE_APPLICATION_CREDENTIALS
+    # to the path of the JSON file on disk. The latter is preferred for local dev.
+    FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_CREDENTIALS_JSON: Optional[str] = None  # JSON string (for Render env vars)
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
-
-    # Auth
-    JWT_SECRET: str = "change-me-in-production"
-    JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000"

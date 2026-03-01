@@ -1,5 +1,6 @@
 """
 Pydantic request/response models for the API.
+Auth is handled entirely by Firebase on the frontend — no auth models here.
 """
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -37,16 +38,6 @@ class AnalyzeResponse(BaseModel):
     signals: Optional[SignalScores] = None
     explainability: Optional[List[ExplainabilityItem]] = None
     processing_time_ms: Optional[int] = None
-
-
-class AuthRequest(BaseModel):
-    email: str = Field(..., min_length=5)
-    password: str = Field(..., min_length=6)
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
 
 
 class HealthResponse(BaseModel):
