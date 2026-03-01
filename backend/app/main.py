@@ -37,8 +37,11 @@ REQUEST_LATENCY = Histogram("http_request_duration_seconds", "Request latency", 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting LLM Misuse Detection API")
-    init_firebase()
+    logger.info("Starting Zynera API")
+    if settings.FIRESTORE_AUTO_INIT:
+        init_firebase()
+    else:
+        logger.info("Firestore auto-init disabled (FIRESTORE_AUTO_INIT=false) – skipping")
     yield
     logger.info("Shutting down")
 
@@ -46,7 +49,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
-    description="Production system for detecting and mitigating LLM misuse in information operations",
+    description="Zynera – AI-powered detection of LLM misuse in information operations",
     lifespan=lifespan,
 )
 

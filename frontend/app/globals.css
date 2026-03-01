@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
-/* LLM Sentinel – vibrant design tokens */
+/* Zynera – design tokens */
 :root {
-  /* Primary palette: coral → tangerine → citrus */
+  /* Primary palette: blue + green */
+  --zynera-blue: #1E40AF;
+  --zynera-blue-mid: #3B82F6;
+  --zynera-blue-light: #93C5FD;
+  --zynera-green: #059669;
+  --zynera-green-mid: #10B981;
+  --zynera-green-light: #6EE7B7;
+  --zynera-accent: #0EA5E9;
+
+  /* Legacy aliases kept for backward compat */
   --sentinel-coral: #FF6B6B;
   --sentinel-tangerine: #FF8E53;
   --sentinel-citrus: #FFC837;
@@ -11,16 +20,16 @@
   --sentinel-magenta: #E040FB;
 
   /* Surfaces */
-  --background: #FAFAFA;
-  --foreground: #1A1A2E;
+  --background: #F0F9FF;
+  --foreground: #0F172A;
   --card-bg: #FFFFFF;
-  --card-border: #E8E8E8;
-  --muted: #6B7280;
+  --card-border: #BFDBFE;
+  --muted: #64748B;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  --shadow-sm: 0 1px 3px rgba(30,64,175,0.08);
+  --shadow-md: 0 4px 12px rgba(30,64,175,0.12);
+  --shadow-lg: 0 8px 30px rgba(30,64,175,0.15);
 }
 
 @theme inline {
@@ -31,11 +40,11 @@
 }
 
 [data-theme="dark"] {
-  --background: #0F0F1A;
-  --foreground: #F0F0F0;
-  --card-bg: #1A1A2E;
-  --card-border: #2A2A3E;
-  --muted: #9CA3AF;
+  --background: #0F172A;
+  --foreground: #F0F9FF;
+  --card-bg: #1E293B;
+  --card-border: #1E3A5F;
+  --muted: #94A3B8;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
   --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
@@ -60,7 +69,7 @@ body {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--sentinel-coral), var(--sentinel-tangerine), var(--sentinel-citrus));
+  background: linear-gradient(135deg, var(--zynera-blue), var(--zynera-accent), var(--zynera-green-mid));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -68,12 +77,12 @@ body {
 
 /* CTA button animation */
 .cta-button {
-  background: linear-gradient(135deg, var(--sentinel-coral), var(--sentinel-tangerine));
+  background: linear-gradient(135deg, var(--zynera-blue), var(--zynera-green-mid));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .cta-button:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.35);
+  box-shadow: 0 8px 25px rgba(30, 64, 175, 0.35);
 }
 .cta-button:active {
   transform: translateY(0) scale(0.98);
@@ -93,17 +102,106 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
-/* Theme toggle button – appearance controlled by CSS, no React state needed */
+/* Theme toggle button */
 .theme-toggle {
   background: #FFFFFF;
-  color: #5C6BC0;
+  color: #1E40AF;
 }
 [data-theme="dark"] .theme-toggle {
-  background: #2A2A3E;
-  color: #FFC837;
+  background: #1E293B;
+  color: #10B981;
 }
 /* Sun icon shown in dark mode; moon icon shown in light mode */
 .theme-sun { display: none; }
 .theme-moon { display: block; }
 [data-theme="dark"] .theme-sun { display: block; }
 [data-theme="dark"] .theme-moon { display: none; }
+
+/* ── Robot Animator ──────────────────────────────────────────────────────── */
+
+@keyframes robotSlideIn {
+  from { opacity: 0; transform: translateX(60px) scale(0.85); }
+  to   { opacity: 1; transform: translateX(0)    scale(1); }
+}
+
+@keyframes robotPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.04); }
+}
+
+@keyframes eyeBlink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95%            { transform: scaleY(0.1); }
+}
+
+@keyframes magnifierScan {
+  0%   { transform: translate(0, 0) rotate(-8deg); }
+  25%  { transform: translate(4px, -3px) rotate(0deg); }
+  50%  { transform: translate(8px, 0px) rotate(8deg); }
+  75%  { transform: translate(4px, 3px) rotate(0deg); }
+  100% { transform: translate(0, 0) rotate(-8deg); }
+}
+
+@keyframes thumbsUp {
+  0%   { transform: translateY(8px) rotate(-15deg); opacity: 0; }
+  60%  { transform: translateY(-4px) rotate(5deg); opacity: 1; }
+  100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+}
+
+@keyframes ringPulse {
+  0%   { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+.robot-container {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 140px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.robot-container[data-state="idle"] {
+  opacity: 0;
+  transform: translateY(-50%) translateX(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.robot-container[data-state="loading"] {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+  animation: robotSlideIn 0.5s ease-out forwards;
+}
+
+.robot-container[data-state="success"] {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.robot-eye {
+  animation: eyeBlink 3.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.robot-magnifier[data-scanning="true"] {
+  animation: magnifierScan 1.2s ease-in-out infinite;
+  transform-origin: 12px 12px;
+}
+
+.robot-thumb[data-visible="true"] {
+  animation: thumbsUp 0.5s ease-out forwards;
+}
+.robot-thumb[data-visible="false"] {
+  opacity: 0;
+}
+
+.robot-pulse-ring {
+  animation: ringPulse 1.0s ease-out infinite;
+  transform-origin: center;
+}
+
+.robot-body-pulse[data-active="true"] {
+  animation: robotPulse 1.5s ease-in-out infinite;
+}

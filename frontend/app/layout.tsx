@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sentinel – LLM Misuse Detector",
-  description: "Detect and mitigate misuse of Large Language Models in information operations",
+  title: "Zynera – AI Misuse Detector",
+  description: "Zynera: AI-powered detection of LLM misuse in information operations",
 };
 
 export default function RootLayout({

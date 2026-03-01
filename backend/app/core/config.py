@@ -11,12 +11,14 @@ _HF_ROUTER = "https://router.huggingface.co/hf-inference/models"
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "LLM Misuse Detector"
+    APP_NAME: str = "Zynera"
     DEBUG: bool = False
 
     # Firebase
     FIREBASE_PROJECT_ID: str = ""
     FIREBASE_CREDENTIALS_JSON: Optional[str] = None
+    # Set to False to skip Firestore init at startup (useful when credentials are absent)
+    FIRESTORE_AUTO_INIT: bool = True
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
