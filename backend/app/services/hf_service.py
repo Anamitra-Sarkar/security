@@ -104,7 +104,14 @@ async def get_embeddings(text: str) -> list[float]:
 
 
 async def detect_harm(text: str) -> float:
-    """Returns probability of harmful content (0-1). Non-fatal on failure."""
+    """Returns probability of harmful content (0-1). Non-fatal on failure.
+    
+    The RoBERTa hate speech model returns labels like:
+    - 'hate' or 'hateful' for harmful content
+    - 'nothate' or 'not hate' for safe content
+    
+    We need to return the score for the HARMFUL class, not just any matching label.
+    """
     if not settings.HF_HARM_CLASSIFIER:
         return 0.0
 
@@ -112,11 +119,34 @@ async def detect_harm(text: str) -> float:
         result = await _hf_post(settings.HF_HARM_CLASSIFIER, {"inputs": text})
         if isinstance(result, list) and len(result) > 0:
             labels = result[0] if isinstance(result[0], list) else result
+            
+            # First, try to find explicit harmful labels
             for item in labels:
                 label = item.get("label", "").lower()
-                if any(k in label for k in ("hate", "toxic", "harmful", "hateful", "target")):
-                    return float(item["score"])
-            return float(max(labels, key=lambda x: x.get("score", 0)).get("score", 0.0))
+                # Look for labels that indicate HARMFUL content
+                if any(k in label for k in ("hate", "hateful", "toxic", "harmful")):
+                    # Make sure it's NOT a "nothate" or "not harmful" label
+                    if not any(neg in label for neg in ("not", "no", "non")):
+                        return float(item["score"])
+            
+            # If we only found "nothate" labels, return inverse score
+            for item in labels:
+                label = item.get("label", "").lower()
+                if any(neg in label for neg in ("nothate", "not hate", "not harmful")):
+                    # Return 1 - score (if 95% not harmful, then 5% harmful)
+                    return float(1.0 - item["score"])
+            
+            # Fallback: If model returns generic labels, assume lower score is safer
+            # Sort by score descending and check if highest is harmful
+            sorted_labels = sorted(labels, key=lambda x: x.get("score", 0), reverse=True)
+            if sorted_labels:
+                top_label = sorted_labels[0].get("label", "").lower()
+                if any(k in top_label for k in ("hate", "toxic", "harmful")) and \
+                   not any(neg in top_label for neg in ("not", "no", "non")):
+                    return float(sorted_labels[0]["score"])
+            
+            # If still no match, return 0 (safe)
+            return 0.0
         return 0.0
     except Exception as e:
         logger.warning("HF harm classifier failed", error=str(e))

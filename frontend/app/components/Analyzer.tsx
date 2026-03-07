@@ -1,11 +1,11 @@
 /**
  * Zynera Analyzer – main analysis interface.
- * Blue + green gradient background, RobotAnimator on the right of the input,
+ * Blue + green gradient background, MagnifyingGlass animation during analysis,
  * results with explainability panels and AI Fixer tab.
  */
 "use client";
 import { useState, useRef } from "react";
-import RobotAnimator from "./RobotAnimator";
+import MagnifyingGlass from "./MagnifyingGlass";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -92,7 +92,7 @@ interface AnalyzerProps {
 
 export default function Analyzer({ onBack }: AnalyzerProps) {
   const [text, setText] = useState("");
-  const [robotState, setRobotState] = useState<"idle" | "loading" | "success">("idle");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showExplain, setShowExplain] = useState(false);
@@ -109,7 +109,7 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
       setError("Text must be at least 10 characters");
       return;
     }
-    setRobotState("loading");
+    setIsAnalyzing(true);
     setError(null);
     setResult(null);
     setActiveTab("results");
@@ -129,10 +129,10 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
       const data: AnalysisResult = await res.json();
       setResult(data);
       setHistory((prev) => [data, ...prev].slice(0, 10));
-      setRobotState("success");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Analysis failed");
-      setRobotState("idle");
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -165,13 +165,16 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
 
   return (
     <div
-      className="min-h-screen py-8 px-4"
+      className="min-h-screen py-8 px-4 relative"
       style={{
         background:
           "linear-gradient(160deg,rgba(219,234,254,0.55) 0%,rgba(209,250,229,0.45) 100%), var(--background)",
         color: "var(--foreground)",
       }}
     >
+      {/* Magnifying Glass Animation */}
+      <MagnifyingGlass isAnalyzing={isAnalyzing} />
+
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <header className="mb-8 animate-fade-in-up">
@@ -194,16 +197,14 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
           </div>
         </header>
 
-        {/* Input area + Robot */}
+        {/* Input area */}
         <div
           ref={inputAreaRef}
-          className="relative rounded-2xl p-6 mb-6 card-hover overflow-visible"
+          className="rounded-2xl p-6 mb-6 card-hover"
           style={{
             background: "var(--card-bg)",
             border: "1px solid var(--card-border)",
             boxShadow: "var(--shadow-md)",
-            /* extra right padding so robot doesn't overlap textarea on wider screens */
-            paddingRight: "clamp(1.5rem, 12vw, 10rem)",
           }}
         >
           <label htmlFor="analysis-input" className="block text-sm font-medium mb-2">
@@ -212,10 +213,7 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
           <textarea
             id="analysis-input"
             value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              if (robotState === "success") setRobotState("idle");
-            }}
+            onChange={(e) => setText(e.target.value)}
             placeholder="Paste text here to check for AI generation, extremism, disinformation patterns…"
             className="w-full h-40 p-4 rounded-xl resize-none text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             style={{
@@ -231,11 +229,11 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
             </span>
             <button
               onClick={handleAnalyze}
-              disabled={robotState === "loading" || text.length < 10}
+              disabled={isAnalyzing || text.length < 10}
               className="cta-button text-white font-semibold px-8 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Analyze text with Zynera"
             >
-              {robotState === "loading" ? (
+              {isAnalyzing ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
@@ -247,28 +245,6 @@ export default function Analyzer({ onBack }: AnalyzerProps) {
                 "Analyze"
               )}
             </button>
-          </div>
-
-          {/* Robot – positioned to the right of the input card, vertically centred */}
-          <div
-            className="hidden md:block absolute"
-            style={{
-              right: "-5.5rem",
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: "130px",
-              pointerEvents: "none",
-            }}
-            aria-hidden={robotState === "idle"}
-          >
-            <RobotAnimator state={robotState} aria-label="Zynera robot assistant status" />
-          </div>
-        </div>
-
-        {/* Mobile robot strip */}
-        <div className="flex justify-center mb-4 md:hidden" aria-hidden={robotState === "idle"}>
-          <div style={{ width: 80 }}>
-            <RobotAnimator state={robotState} aria-label="Zynera robot assistant status" />
           </div>
         </div>
 
