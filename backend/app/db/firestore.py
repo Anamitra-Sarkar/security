@@ -44,7 +44,8 @@ def init_firebase() -> None:
     global _db, _enabled
 
     if not settings.FIREBASE_CREDENTIALS_JSON:
-        logger.warning("FIREBASE_CREDENTIALS_JSON not set – Firestore disabled")
+        # Silently disable if not configured - no need to spam logs
+        _enabled = False
         return
 
     try:
@@ -60,10 +61,10 @@ def init_firebase() -> None:
         _enabled = True
         project = settings.FIREBASE_PROJECT_ID or cred_dict.get("project_id", "")
         logger.info("Firebase + Firestore initialised", project=project)
-    except Exception as e:
+    except Exception:
+        # Silently fail - Firestore is optional, no need to spam logs
         _db = None
         _enabled = False
-        logger.warning("Firebase init failed – Firestore disabled", error=str(e))
 
 
 # ---- Public helpers --------------------------------------------------------
@@ -75,11 +76,8 @@ async def save_document(collection: str, doc_id: str, data: dict) -> bool:
     try:
         _db.collection(collection).document(doc_id).set(data)
         return True
-    except google.auth.exceptions.RefreshError as e:
-        logger.debug("Firestore save_document skipped – credential refresh failed", collection=collection, doc_id=doc_id, error=str(e))
-        return False
-    except Exception as e:
-        logger.warning("Firestore save_document failed", collection=collection, doc_id=doc_id, error=str(e))
+    except (google.auth.exceptions.RefreshError, Exception):
+        # Silently fail - no logs, just return False
         return False
 
 
@@ -90,11 +88,8 @@ async def get_document(collection: str, doc_id: str) -> dict | None:
     try:
         doc = _db.collection(collection).document(doc_id).get()
         return doc.to_dict() if doc.exists else None
-    except google.auth.exceptions.RefreshError as e:
-        logger.debug("Firestore get_document skipped – credential refresh failed", collection=collection, doc_id=doc_id, error=str(e))
-        return None
-    except Exception as e:
-        logger.warning("Firestore get_document failed", collection=collection, doc_id=doc_id, error=str(e))
+    except (google.auth.exceptions.RefreshError, Exception):
+        # Silently fail - no logs, just return None
         return None
 
 

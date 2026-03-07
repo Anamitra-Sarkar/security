@@ -116,8 +116,8 @@ async def _analyze_text(text: str, user_id: str | None = None) -> dict:
         )
         saved = await save_document(COLLECTION, doc.id, doc.to_dict())
         result["id"] = doc.id if saved else text_hash
-    except Exception as e:
-        logger.warning("Firestore persist failed", error=str(e))
+    except Exception:
+        # Silently skip Firestore - it's optional
         result["id"] = text_hash
 
     return result
@@ -195,11 +195,11 @@ async def assist_text(request: AssistRequest):
     """Call Groq API to propose a rewrite of flagged text to reduce AI threat indicators.
     
     The AI Fixer should:
-    1. Make text sound more human and natural
-    2. Remove any harmful, offensive, or extreme language
-    3. Simplify overly complex or robotic phrasing
-    4. Maintain the original meaning and key information
-    5. Use casual, conversational language
+    1. Make text sound EXTREMELY human and natural with imperfections
+    2. Remove any harmful, offensive, or extreme language completely
+    3. Use casual, everyday language with natural variations
+    4. Add human quirks: contractions, filler words, casual tone
+    5. Maintain the original meaning and key information
     """
     if not settings.GROQ_API_KEY:
         raise HTTPException(
@@ -214,18 +214,24 @@ async def assist_text(request: AssistRequest):
     logs: list[str] = []
     logs.append(f"Preparing rewrite request for Groq model: {settings.GROQ_MODEL}")
 
-    # Improved prompt that specifically targets reducing AI detection and harm scores
+    # Enhanced prompt specifically designed to evade AI detection
     prompt = (
-        "You are a text editor helping to make writing sound more natural and human. "
-        "Rewrite the following text following these rules:\n\n"
-        "1. Use simple, casual, conversational language like a real person would write\n"
-        "2. Remove any offensive, harmful, hateful, or extreme language completely\n"
-        "3. Avoid robotic phrases, formal tone, or AI-typical patterns\n"
-        "4. Add small imperfections like informal contractions (e.g., 'it's', 'don't')\n"
-        "5. Keep the core meaning and key facts, but make it sound authentic\n"
-        "6. If the text is a greeting or simple message, keep it short and friendly\n\n"
-        "Return ONLY the rewritten text with no explanations, comments, or meta-text.\n\n"
-        f"Text to rewrite:\n{request.text}"
+        "You are helping someone rewrite text to sound completely natural and human-written. "
+        "Your goal is to make it indistinguishable from casual, authentic human writing.\n\n"
+        "CRITICAL RULES:\n"
+        "1. Write like a real person texting or chatting - use informal, conversational tone\n"
+        "2. Add natural imperfections: contractions (don't, it's, there's), filler words (just, really, kinda)\n"
+        "3. Remove ALL harmful, offensive, hateful, or toxic language - replace with friendly alternatives\n"
+        "4. Vary sentence length - mix short and long sentences naturally\n"
+        "5. Use simple everyday vocabulary - avoid fancy or technical words\n"
+        "6. Add casual expressions and natural flow (like, you know, I mean)\n"
+        "7. If it's a greeting, keep it super short and casual (max 10 words)\n"
+        "8. Don't be overly polite or formal - write like you're texting a friend\n"
+        "9. Include minor typos or informal grammar occasionally (but readable)\n"
+        "10. Keep the core message but make it sound spontaneous and unedited\n\n"
+        "IMPORTANT: Return ONLY the rewritten text. No explanations, no 'Here is', no meta-commentary. "
+        "Just the natural-sounding version.\n\n"
+        f"Text to make human-like:\n{request.text}"
     )
 
     try:
@@ -241,19 +247,33 @@ async def assist_text(request: AssistRequest):
                     "model": settings.GROQ_MODEL,
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": 8192,
-                    "temperature": 0.8,  # Increased from 0.7 for more natural variation
+                    "temperature": 0.9,  # Increased to 0.9 for more natural variation
+                    "top_p": 0.95,  # Added to increase diversity
+                    "frequency_penalty": 0.3,  # Reduce repetition
+                    "presence_penalty": 0.3,  # Encourage natural variation
                 },
             )
             response.raise_for_status()
             data = response.json()
             fixed_text = data["choices"][0]["message"]["content"].strip()
             
-            # Remove any meta-commentary that the model might add
-            if fixed_text.startswith('Here') or fixed_text.startswith('Sure'):
-                # Try to extract just the rewritten text
+            # Aggressively remove any meta-commentary
+            # Common AI patterns to strip out
+            meta_phrases = [
+                "here is", "here's", "sure", "certainly", "of course",
+                "i've rewritten", "i rewrote", "rewritten version",
+                "here you go", "this is", "below is"
+            ]
+            
+            first_line = fixed_text.split('\n')[0].lower()
+            if any(phrase in first_line for phrase in meta_phrases):
+                # Skip the meta-commentary line
                 lines = fixed_text.split('\n')
                 if len(lines) > 1:
                     fixed_text = '\n'.join(lines[1:]).strip()
+                    # Remove quotes if the AI wrapped it
+                    if fixed_text.startswith('"') and fixed_text.endswith('"'):
+                        fixed_text = fixed_text[1:-1].strip()
             
             logs.append("Groq model returned rewritten text successfully.")
     except httpx.TimeoutException:
