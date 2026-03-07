@@ -48,20 +48,12 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
         </div>
 
         {/* CTA */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="#"
-            className="hidden md:block text-sm text-slate-400 hover:text-white transition-colors"
-          >
-            Sign in
-          </Link>
-          <button
-            onClick={onGetStarted}
-            className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-teal-500 text-white font-medium shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-200"
-          >
-            Get Started
-          </button>
-        </div>
+        <button
+          onClick={onGetStarted}
+          className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-teal-500 text-white font-medium shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-200"
+        >
+          Get Started
+        </button>
       </div>
     </motion.nav>
   );
