@@ -1,13 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 interface CTASectionProps {
   onTryNow?: () => void;
 }
 
 export default function CTASection({ onTryNow }: CTASectionProps) {
+  const scrollToArchitecture = () => {
+    const section = document.getElementById("architecture");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <section className="relative bg-[#050d1a] py-28 px-6 overflow-hidden">
       {/* Background glow */}
@@ -54,12 +60,12 @@ export default function CTASection({ onTryNow }: CTASectionProps) {
               <path d="M3 8h10M9 4l4 4-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <Link
-            href="#architecture"
+          <button
+            onClick={scrollToArchitecture}
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg border border-white/10 text-slate-300 text-sm font-medium hover:border-white/20 hover:text-white hover:-translate-y-0.5 transition-all duration-200"
           >
             View Architecture
-          </Link>
+          </button>
         </div>
 
         {/* Trust indicators */}

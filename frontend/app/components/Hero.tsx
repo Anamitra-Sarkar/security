@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 interface HeroProps {
   onTryNow?: () => void;
@@ -51,6 +50,13 @@ const signalCards = [
 ];
 
 export default function Hero({ onTryNow }: HeroProps) {
+  const scrollToArchitecture = () => {
+    const section = document.getElementById("architecture");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-[#060f23] via-[#071628] to-[#06201e] overflow-hidden">
       {/* Subtle grid overlay */}
@@ -125,15 +131,15 @@ export default function Hero({ onTryNow }: HeroProps) {
                   <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
-              <Link
-                href="#architecture"
+              <button
+                onClick={scrollToArchitecture}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-slate-300 text-sm font-medium hover:border-white/20 hover:text-white hover:-translate-y-0.5 transition-all duration-200"
               >
                 View Architecture
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </Link>
+              </button>
             </motion.div>
 
             {/* Social proof */}
