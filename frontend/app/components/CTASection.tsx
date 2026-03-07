@@ -15,14 +15,19 @@ export default function CTASection({ onTryNow }: CTASectionProps) {
   };
 
   return (
-    <section className="relative bg-[#050d1a] py-28 px-6 overflow-hidden">
+    <section 
+      className="relative py-28 px-6 overflow-hidden"
+      style={{
+        background: 'linear-gradient(to bottom, #3B82F6 0%, #2563EB 50%, #1E40AF 100%)'
+      }}
+    >
       {/* Background glow */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[800px] h-[400px] bg-gradient-to-r from-blue-600/8 via-teal-500/10 to-blue-600/8 rounded-full blur-[100px]" />
+        <div className="w-[800px] h-[400px] bg-gradient-to-r from-blue-400/10 via-teal-400/15 to-blue-400/10 rounded-full blur-[100px]" />
       </div>
 
       {/* Border top accent */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-teal-500/30 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-teal-300/40 to-transparent" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -32,20 +37,20 @@ export default function CTASection({ onTryNow }: CTASectionProps) {
         className="relative max-w-3xl mx-auto text-center"
       >
         {/* Label */}
-        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-300 text-xs font-medium tracking-wide mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-300/30 bg-blue-400/20 text-blue-50 text-xs font-medium tracking-wide mb-8">
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-300 animate-pulse" />
           Start detecting today
         </span>
 
         <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-6 font-[Sora,Inter,sans-serif]">
           Stop AI misuse
           <br />
-          <span className="bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+          <span className="text-blue-100">
             before it causes harm
           </span>
         </h2>
 
-        <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+        <p className="text-blue-100 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
           Deploy Zynera in minutes. Integrate our FastAPI endpoints, ingest text,
           and get explainable threat scores in under 100ms.
         </p>
@@ -53,16 +58,16 @@ export default function CTASection({ onTryNow }: CTASectionProps) {
         <div className="flex flex-wrap items-center justify-center gap-4">
           <button
             onClick={onTryNow}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-gradient-to-r from-blue-600 to-teal-500 text-white font-semibold shadow-xl shadow-blue-500/25 hover:shadow-blue-500/45 hover:-translate-y-1 transition-all duration-200"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-white text-blue-600 font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-200"
           >
             Try Zynera Now
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
           <button
             onClick={scrollToArchitecture}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg border border-white/10 text-slate-300 text-sm font-medium hover:border-white/20 hover:text-white hover:-translate-y-0.5 transition-all duration-200"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg border border-blue-300/30 text-blue-50 text-sm font-medium hover:border-blue-200/50 hover:bg-blue-400/10 hover:-translate-y-0.5 transition-all duration-200"
           >
             View Architecture
           </button>
@@ -76,9 +81,9 @@ export default function CTASection({ onTryNow }: CTASectionProps) {
             "Prometheus metrics",
             "Docker ready",
           ].map((item) => (
-            <div key={item} className="flex items-center gap-2 text-slate-500 text-sm">
+            <div key={item} className="flex items-center gap-2 text-blue-200 text-sm">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2.5 7l3 3 6-6" stroke="#2dd4bf" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2.5 7l3 3 6-6" stroke="#6ee7b7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {item}
             </div>

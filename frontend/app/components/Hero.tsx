@@ -58,28 +58,33 @@ export default function Hero({ onTryNow }: HeroProps) {
   };
 
   return (
-    <section className="relative min-h-screen overflow-hidden" style={{ background: 'var(--background)' }}>
+    <section 
+      className="relative min-h-screen overflow-hidden"
+      style={{
+        background: 'linear-gradient(to bottom, #EFF6FF 0%, #E0F2FE 50%, #DBEAFE 100%)'
+      }}
+    >
       {/* Subtle gradient overlay */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-20"
         style={{
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%)'
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)'
         }}
       />
 
       {/* Subtle grid overlay */}
       <div
-        className="absolute inset-0 opacity-[0.02]"
+        className="absolute inset-0 opacity-[0.015]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(30,64,175,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(30,64,175,0.3) 1px, transparent 1px)",
+            "linear-gradient(rgba(30,64,175,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(30,64,175,0.4) 1px, transparent 1px)",
           backgroundSize: "64px 64px",
         }}
       />
 
       {/* Ambient glow blobs */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-teal-400/6 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/6 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-teal-400/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-6 pt-32 pb-20">
         <div className="grid lg:grid-cols-2 gap-16 items-center">

@@ -14,8 +14,8 @@ const features = [
     description:
       "AI generation probability, embeddings, perplexity, stylometry, and harm classification working in ensemble for high-accuracy verdicts.",
     accent: "from-blue-500/20 to-blue-500/5",
-    border: "border-blue-500/15",
-    iconBg: "bg-blue-500/15 text-blue-400",
+    border: "border-blue-500/20",
+    iconBg: "bg-blue-500/15 text-blue-600",
     badge: "5 signals",
   },
   {
@@ -29,8 +29,8 @@ const features = [
     description:
       "Sub-second ensemble scoring with explainable signal breakdowns. Each verdict ships with per-signal confidence weights.",
     accent: "from-teal-500/20 to-teal-500/5",
-    border: "border-teal-500/15",
-    iconBg: "bg-teal-500/15 text-teal-400",
+    border: "border-teal-500/20",
+    iconBg: "bg-teal-500/15 text-teal-600",
     badge: "< 100ms",
   },
   {
@@ -44,8 +44,8 @@ const features = [
     description:
       "FastAPI backend, async workers, Redis caching, and Prometheus metrics. Deploy anywhere — Docker, GCP, or bare metal.",
     accent: "from-violet-500/20 to-violet-500/5",
-    border: "border-violet-500/15",
-    iconBg: "bg-violet-500/15 text-violet-400",
+    border: "border-violet-500/20",
+    iconBg: "bg-violet-500/15 text-violet-600",
     badge: "FastAPI · async",
   },
 ];
@@ -68,7 +68,10 @@ export default function FeatureCards() {
   return (
     <section
       id="features"
-      className="relative bg-gradient-to-b from-[#06201e] to-[#050d1a] py-24 px-6"
+      className="relative py-24 px-6"
+      style={{
+        background: 'linear-gradient(to bottom, #DBEAFE 0%, #BFDBFE 50%, #A5D8FF 100%)'
+      }}
     >
       <div className="max-w-7xl mx-auto">
         {/* Section header */}
@@ -79,13 +82,13 @@ export default function FeatureCards() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="text-center mb-16"
         >
-          <p className="text-teal-400 text-sm font-medium tracking-widest uppercase mb-3">
+          <p className="text-teal-600 text-sm font-medium tracking-widest uppercase mb-3">
             Why Zynera
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight font-[Sora,Inter,sans-serif]">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight font-[Sora,Inter,sans-serif]" style={{ color: 'var(--foreground)' }}>
             Built for precision, deployed at scale
           </h2>
-          <p className="text-slate-500 mt-4 max-w-xl mx-auto text-base">
+          <p className="mt-4 max-w-xl mx-auto text-base" style={{ color: 'var(--muted)' }}>
             Every component is designed to be fast, explainable, and production-hardened.
           </p>
         </motion.div>
@@ -104,9 +107,10 @@ export default function FeatureCards() {
               variants={cardVariants}
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
               className={`relative rounded-2xl border ${f.border} bg-gradient-to-b ${f.accent} p-6 overflow-hidden group cursor-default`}
+              style={{ background: 'rgba(255, 255, 255, 0.5)' }}
             >
               {/* Top glow line */}
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-400/20 to-transparent" />
 
               {/* Icon */}
               <div className={`w-10 h-10 rounded-xl ${f.iconBg} flex items-center justify-center mb-5`}>
@@ -115,19 +119,19 @@ export default function FeatureCards() {
 
               {/* Title + badge */}
               <div className="flex items-start justify-between gap-2 mb-3">
-                <h3 className="text-white font-semibold text-base font-[Sora,Inter,sans-serif]">
+                <h3 className="font-semibold text-base font-[Sora,Inter,sans-serif]" style={{ color: 'var(--foreground)' }}>
                   {f.title}
                 </h3>
-                <span className="shrink-0 text-[10px] text-slate-400 border border-white/8 rounded-full px-2 py-0.5 font-mono">
+                <span className="shrink-0 text-[10px] border rounded-full px-2 py-0.5 font-mono" style={{ color: 'var(--muted)', borderColor: 'var(--card-border)' }}>
                   {f.badge}
                 </span>
               </div>
 
               {/* Description */}
-              <p className="text-slate-400 text-sm leading-relaxed">{f.description}</p>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>{f.description}</p>
 
               {/* Bottom arrow */}
-              <div className="mt-5 flex items-center gap-1.5 text-slate-600 group-hover:text-slate-400 transition-colors text-xs">
+              <div className="mt-5 flex items-center gap-1.5 transition-colors text-xs" style={{ color: 'var(--muted)' }}>
                 <span>Learn more</span>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />

@@ -71,11 +71,14 @@ export default function Architecture() {
   return (
     <section
       id="architecture"
-      className="relative bg-gradient-to-b from-[#050d1a] via-[#06201e] to-[#050d1a] py-24 px-6 overflow-hidden"
+      className="relative py-24 px-6 overflow-hidden"
+      style={{
+        background: 'linear-gradient(to bottom, #A5D8FF 0%, #7DD3FC 30%, #60A5FA 70%, #3B82F6 100%)'
+      }}
     >
       {/* Background accent */}
       <div className="absolute inset-0 opacity-[0.02]" style={{
-        backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+        backgroundImage: "linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)",
         backgroundSize: "48px 48px",
       }} />
 
@@ -88,13 +91,13 @@ export default function Architecture() {
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
-          <p className="text-blue-400 text-sm font-medium tracking-widest uppercase mb-3">
+          <p className="text-blue-700 text-sm font-medium tracking-widest uppercase mb-3">
             System Architecture
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight font-[Sora,Inter,sans-serif] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight font-[Sora,Inter,sans-serif] mb-4 text-white">
             Multi-Model Ensemble Detection
           </h2>
-          <p className="text-slate-400 text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base max-w-2xl mx-auto leading-relaxed text-blue-50">
             Zynera doesn't rely on a single model. Instead, it runs five independent detection signals in parallel,
             then fuses their outputs into one explainable threat score using weighted ensemble voting.
           </p>
@@ -110,7 +113,7 @@ export default function Architecture() {
         >
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
             {/* Connecting lines */}
-            <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/20 via-teal-500/30 to-blue-500/20 -translate-y-1/2" />
+            <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400/40 via-blue-300/50 to-blue-400/40 -translate-y-1/2" />
 
             {stages.map((stage, i) => (
               <motion.div
@@ -122,18 +125,18 @@ export default function Architecture() {
                 className="relative"
               >
                 <div
-                  className={`rounded-2xl border p-6 transition-all duration-500 ${
+                  className={`rounded-2xl border p-6 transition-all duration-500 backdrop-blur-sm ${
                     activeStage === i
-                      ? "bg-gradient-to-b from-blue-500/15 to-teal-500/10 border-blue-500/40 shadow-lg shadow-blue-500/20"
-                      : "bg-white/3 border-white/8"
+                      ? "bg-white/90 border-blue-400/60 shadow-xl shadow-blue-500/30"
+                      : "bg-white/60 border-blue-300/30"
                   }`}
                 >
                   {/* Icon */}
                   <div
                     className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-500 ${
                       activeStage === i
-                        ? "bg-gradient-to-br from-blue-500/30 to-teal-500/20 text-blue-300"
-                        : "bg-white/5 text-slate-500"
+                        ? "bg-gradient-to-br from-blue-500/30 to-teal-500/20 text-blue-700"
+                        : "bg-blue-100/50 text-blue-400"
                     }`}
                   >
                     {stage.icon}
@@ -144,29 +147,29 @@ export default function Architecture() {
                     <span
                       className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${
                         activeStage === i
-                          ? "bg-gradient-to-br from-blue-500 to-teal-500 text-white"
-                          : "bg-white/10 text-slate-600"
+                          ? "bg-gradient-to-br from-blue-600 to-teal-500 text-white"
+                          : "bg-blue-200/60 text-blue-600"
                       }`}
                     >
                       {stage.id}
                     </span>
                     <h3
                       className={`font-semibold text-sm transition-colors duration-500 ${
-                        activeStage === i ? "text-white" : "text-slate-400"
+                        activeStage === i ? "text-blue-900" : "text-blue-700"
                       }`}
                     >
                       {stage.title}
                     </h3>
                   </div>
 
-                  <p className="text-xs text-slate-500 leading-relaxed">{stage.desc}</p>
+                  <p className="text-xs text-blue-600 leading-relaxed">{stage.desc}</p>
 
                   {/* Active indicator pulse */}
                   {activeStage === i && (
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-teal-400 animate-pulse"
+                      className="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-teal-500 animate-pulse"
                     />
                   )}
                 </div>
@@ -185,7 +188,7 @@ export default function Architecture() {
         >
           {/* Left: Signal cards */}
           <div className="space-y-3">
-            <h3 className="text-xl font-bold text-white mb-5 font-[Sora,Inter,sans-serif]">
+            <h3 className="text-xl font-bold mb-5 font-[Sora,Inter,sans-serif] text-white">
               Five Independent Signals
             </h3>
             {signals.map((signal, i) => (
@@ -195,20 +198,21 @@ export default function Architecture() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: signal.delay }}
-                className="rounded-xl bg-white/3 border border-white/8 p-4 hover:bg-white/5 transition-all duration-200 group"
+                className="rounded-xl border p-4 hover:shadow-lg transition-all duration-200 group backdrop-blur-sm"
+                style={{ background: 'rgba(255, 255, 255, 0.7)', borderColor: 'rgba(255, 255, 255, 0.5)' }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${signal.color} flex items-center justify-center`}>
                       <span className="w-2 h-2 rounded-full bg-white" />
                     </div>
-                    <span className="text-white font-medium text-sm">{signal.name}</span>
+                    <span className="font-medium text-sm text-blue-900">{signal.name}</span>
                   </div>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-slate-600 group-hover:text-slate-400 transition-colors">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-blue-400 group-hover:text-blue-600 transition-colors">
                     <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     whileInView={{ width: "100%" }}
@@ -222,8 +226,8 @@ export default function Architecture() {
           </div>
 
           {/* Right: Process explanation */}
-          <div className="rounded-2xl border border-white/8 bg-gradient-to-b from-white/5 to-white/3 p-8">
-            <h3 className="text-xl font-bold text-white mb-6 font-[Sora,Inter,sans-serif]">
+          <div className="rounded-2xl border p-8 backdrop-blur-sm" style={{ background: 'rgba(255, 255, 255, 0.8)', borderColor: 'rgba(255, 255, 255, 0.6)' }}>
+            <h3 className="text-xl font-bold mb-6 font-[Sora,Inter,sans-serif] text-blue-900">
               How It Works
             </h3>
             <div className="space-y-5">
@@ -250,27 +254,27 @@ export default function Architecture() {
                 },
               ].map((item, i) => (
                 <div key={item.step} className="flex gap-4">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-teal-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-teal-100 border border-blue-300/40 flex items-center justify-center text-blue-700 text-xs font-bold">
                     {item.step}
                   </span>
                   <div>
-                    <h4 className="text-white font-semibold text-sm mb-1">{item.title}</h4>
-                    <p className="text-slate-400 text-xs leading-relaxed">{item.desc}</p>
+                    <h4 className="text-blue-900 font-semibold text-sm mb-1">{item.title}</h4>
+                    <p className="text-blue-700 text-xs leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Tech callout */}
-            <div className="mt-6 pt-6 border-t border-white/10 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center flex-shrink-0">
+            <div className="mt-6 pt-6 border-t flex items-start gap-3" style={{ borderColor: 'rgba(59, 130, 246, 0.2)' }}>
+              <div className="w-8 h-8 rounded-lg bg-teal-100 border border-teal-300/40 flex items-center justify-center flex-shrink-0">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M7 2v10M2 7h10" stroke="#2dd4bf" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M7 2v10M2 7h10" stroke="#14b8a6" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
               <div>
-                <p className="text-teal-300 text-xs font-semibold mb-1">Production Stack</p>
-                <p className="text-slate-500 text-xs leading-relaxed">
+                <p className="text-teal-700 text-xs font-semibold mb-1">Production Stack</p>
+                <p className="text-blue-600 text-xs leading-relaxed">
                   FastAPI async workers, Redis caching, Qdrant vector store, Prometheus metrics.
                 </p>
               </div>
