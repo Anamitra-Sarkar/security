@@ -52,6 +52,7 @@ class Settings(BaseSettings):
 
     PERPLEXITY_THRESHOLD: float = 0.3
     RATE_LIMIT_PER_MINUTE: int = 30
+    RESULT_STORE_LIMIT: int = 512
 
     @property
     def cors_origins_list(self) -> List[str]:

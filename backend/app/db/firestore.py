@@ -11,11 +11,11 @@ from __future__ import annotations
 from collections import OrderedDict
 from typing import Any
 
+from backend.app.core.config import settings
 from backend.app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-_STORE_LIMIT = 512
 _db: "OrderedDict[str, dict[str, Any]]" = OrderedDict()
 _enabled: bool = True
 
@@ -33,7 +33,7 @@ async def save_document(collection: str, doc_id: str, data: dict) -> bool:
     key = f"{collection}:{doc_id}"
     _db[key] = dict(data)
     _db.move_to_end(key)
-    if len(_db) > _STORE_LIMIT:
+    if len(_db) > settings.RESULT_STORE_LIMIT:
         _db.popitem(last=False)
     return True
 

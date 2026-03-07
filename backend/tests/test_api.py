@@ -171,11 +171,12 @@ class TestModelConfiguration:
         """Default backend model settings should match the documented README models."""
         from backend.app.core.config import settings
 
-        assert settings.HF_DETECTOR_PRIMARY.endswith("/desklib/ai-text-detector-v1.01")
-        assert settings.HF_DETECTOR_FALLBACK.endswith("/fakespot-ai/roberta-base-ai-text-detection-v1")
-        assert settings.HF_EMBEDDINGS_PRIMARY.endswith("/sentence-transformers/all-mpnet-base-v2")
-        assert settings.HF_EMBEDDINGS_FALLBACK.endswith("/sentence-transformers/all-MiniLM-L6-v2")
-        assert settings.HF_HARM_CLASSIFIER.endswith("/facebook/roberta-hate-speech-dynabench-r4-target")
+        router_base = "https://router.huggingface.co/hf-inference/models"
+        assert settings.HF_DETECTOR_PRIMARY == f"{router_base}/desklib/ai-text-detector-v1.01"
+        assert settings.HF_DETECTOR_FALLBACK == f"{router_base}/fakespot-ai/roberta-base-ai-text-detection-v1"
+        assert settings.HF_EMBEDDINGS_PRIMARY == f"{router_base}/sentence-transformers/all-mpnet-base-v2"
+        assert settings.HF_EMBEDDINGS_FALLBACK == f"{router_base}/sentence-transformers/all-MiniLM-L6-v2"
+        assert settings.HF_HARM_CLASSIFIER == f"{router_base}/facebook/roberta-hate-speech-dynabench-r4-target"
 
 
 class TestAttackSimulations:
