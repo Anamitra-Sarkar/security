@@ -55,41 +55,6 @@ const GitBranch = () => (
   </svg>
 );
 
-// Animation variants
-const fadeInUp = {
-  hidden: { opacity: 0, y: 60 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut"
-    }
-  }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15
-    }
-  }
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: { 
-    opacity: 1, 
-    scale: 1,
-    transition: {
-      duration: 0.5,
-      ease: "easeOut"
-    }
-  }
-};
-
 export default function DocsPage() {
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -146,10 +111,10 @@ export default function DocsPage() {
         <div className="max-w-5xl mx-auto">
           {/* Hero Section */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="text-center mb-16"
           >
             <motion.div 
@@ -180,10 +145,10 @@ export default function DocsPage() {
 
           {/* Overview Card */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
-            variants={scaleIn}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
             className="mb-12 p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300"
           >
@@ -219,26 +184,23 @@ export default function DocsPage() {
 
           {/* Model Architectures */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 text-slate-800">
               <Brain />
               Model Architectures
             </h2>
-            <motion.div 
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              className="grid gap-6"
-            >
+            <div className="grid gap-6">
               {/* AI Detection Models */}
               <motion.div 
-                variants={scaleIn}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ scale: 1.02, y: -5, transition: { duration: 0.2 } }}
                 className="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200 shadow-md hover:shadow-lg transition-all duration-300"
               >
@@ -257,7 +219,10 @@ export default function DocsPage() {
 
               {/* Embedding Models */}
               <motion.div 
-                variants={scaleIn}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ scale: 1.02, y: -5, transition: { duration: 0.2 } }}
                 className="p-6 rounded-xl bg-gradient-to-br from-teal-50 to-teal-100/50 border border-teal-200 shadow-md hover:shadow-lg transition-all duration-300"
               >
@@ -276,7 +241,10 @@ export default function DocsPage() {
 
               {/* Harm Detection */}
               <motion.div 
-                variants={scaleIn}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ scale: 1.02, y: -5, transition: { duration: 0.2 } }}
                 className="p-6 rounded-xl bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200 shadow-md hover:shadow-lg transition-all duration-300"
               >
@@ -289,7 +257,10 @@ export default function DocsPage() {
 
               {/* Perplexity Model */}
               <motion.div 
-                variants={scaleIn}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ scale: 1.02, y: -5, transition: { duration: 0.2 } }}
                 className="p-6 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-200 shadow-md hover:shadow-lg transition-all duration-300"
               >
@@ -299,15 +270,15 @@ export default function DocsPage() {
                   <p className="text-sm text-slate-600 mt-1">Meta's latest 70B parameter instruction-tuned model. Calculates per-token perplexity to detect statistical anomalies. AI-generated text typically exhibits lower perplexity due to model overconfidence. Groq's LPU™ inference provides sub-100ms latency.</p>
                 </div>
               </motion.div>
-            </motion.div>
+            </div>
           </motion.div>
 
           {/* Analysis Pipeline */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 text-slate-800">
@@ -315,27 +286,27 @@ export default function DocsPage() {
               Analysis Pipeline
             </h2>
             <motion.div 
-              variants={scaleIn}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
               className="p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              <motion.div 
-                variants={staggerContainer}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="space-y-6"
-              >
+              <div className="space-y-6">
                 {[
                   { num: 1, title: "AI Detection", desc: "Input text is analyzed by both DeBERTa and RoBERTa models. Results are ensemble-averaged with weighted confidence scoring.", color: "blue" },
                   { num: 2, title: "Perplexity Computation", desc: "Llama 3.3 70B calculates token-level perplexity. Low perplexity patterns indicate synthetic generation. Anomaly score normalized to 0-1 range.", color: "teal" },
                   { num: 3, title: "Semantic Analysis", desc: "Text is embedded using MPNet/MiniLM and compared against known campaign clusters in Qdrant vector database. HDBSCAN clustering identifies coordinated narratives.", color: "purple" },
                   { num: 4, title: "Harm Detection", desc: "RoBERTa hate speech classifier evaluates content across toxicity, extremism, and misinformation categories. Multi-label scores aggregated into harm probability.", color: "red" },
                   { num: 5, title: "Stylometry Analysis", desc: "Local CPU-based feature extraction: n-gram frequency, function word ratios, readability metrics (Flesch-Kincaid, SMOG), and lexical diversity. Detects writing style anomalies.", color: "amber" }
-                ].map((item) => (
+                ].map((item, idx) => (
                   <motion.div 
                     key={item.num}
-                    variants={fadeInUp}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1, duration: 0.5 }}
                     whileHover={{ x: 10, transition: { duration: 0.2 } }}
                     className="flex gap-4"
                   >
@@ -346,16 +317,16 @@ export default function DocsPage() {
                     </div>
                   </motion.div>
                 ))}
-              </motion.div>
+              </div>
             </motion.div>
           </motion.div>
 
           {/* Ensemble Scoring */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 text-slate-800">
@@ -363,18 +334,15 @@ export default function DocsPage() {
               Ensemble Scoring
             </h2>
             <motion.div 
-              variants={scaleIn}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
               className="p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <p className="text-slate-700 mb-6">Signals are combined using configurable weights to produce a final threat score (0-1 range):</p>
-              <motion.div 
-                variants={staggerContainer}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="grid md:grid-cols-2 gap-4"
-              >
+              <div className="grid md:grid-cols-2 gap-4">
                 {[
                   { label: "AI Generation (p_ai)", percent: "30%", desc: "Primary AI detection signal from ensemble classifiers", color: "blue" },
                   { label: "Perplexity (s_perp)", percent: "20%", desc: "Statistical anomaly detection via LM scoring", color: "teal" },
@@ -385,7 +353,10 @@ export default function DocsPage() {
                 ].map((item, idx) => (
                   <motion.div 
                     key={idx}
-                    variants={scaleIn}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     whileHover={{ scale: 1.05, y: -3, transition: { duration: 0.2 } }}
                     className={`p-4 rounded-lg bg-${item.color}-50 border border-${item.color}-200 hover:shadow-md transition-all duration-200`}
                   >
@@ -396,7 +367,7 @@ export default function DocsPage() {
                     <p className="text-sm text-slate-600">{item.desc}</p>
                   </motion.div>
                 ))}
-              </motion.div>
+              </div>
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -413,23 +384,17 @@ export default function DocsPage() {
 
           {/* Infrastructure */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 text-slate-800">
               <Database />
               Infrastructure Stack
             </h2>
-            <motion.div 
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-50px" }}
-              className="grid md:grid-cols-2 gap-6"
-            >
+            <div className="grid md:grid-cols-2 gap-6">
               {[
                 { title: "Frontend", color: "blue", items: [
                   { label: "Framework:", value: "Next.js 16 with App Router" },
@@ -458,7 +423,10 @@ export default function DocsPage() {
               ].map((section, idx) => (
                 <motion.div 
                   key={idx}
-                  variants={scaleIn}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ delay: idx * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   whileHover={{ scale: 1.03, y: -5, transition: { duration: 0.2 } }}
                   className="p-6 rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
@@ -480,28 +448,22 @@ export default function DocsPage() {
                   </ul>
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
           </motion.div>
 
           {/* API Reference */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3 text-slate-800">
               <Zap />
               API Reference
             </h2>
-            <motion.div 
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="space-y-4"
-            >
+            <div className="space-y-4">
               {[
                 { method: "POST", endpoint: "/api/analyze", desc: "Analyze single text input for AI generation and threat indicators.", returns: "threat_score (0-1), per-signal scores, explainability array", color: "green" },
                 { method: "POST", endpoint: "/api/analyze/bulk", desc: "Batch analysis for up to 20 texts simultaneously.", returns: "Array of analysis results with correlation metadata", color: "green" },
@@ -510,7 +472,10 @@ export default function DocsPage() {
               ].map((api, idx) => (
                 <motion.div 
                   key={idx}
-                  variants={scaleIn}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                   whileHover={{ scale: 1.02, x: 10, transition: { duration: 0.2 } }}
                   className="p-6 rounded-xl bg-white/80 backdrop-blur-sm border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
@@ -522,15 +487,15 @@ export default function DocsPage() {
                   <p className="text-sm text-slate-600"><strong>Returns:</strong> {api.returns}</p>
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
           </motion.div>
 
           {/* Footer CTA */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-50px" }}
-            variants={scaleIn}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
             className="text-center p-8 rounded-2xl bg-gradient-to-br from-blue-100 to-teal-100 border border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300"
           >
