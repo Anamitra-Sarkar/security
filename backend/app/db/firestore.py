@@ -17,7 +17,7 @@ Env vars required:
 from __future__ import annotations
 
 import json
-import signal
+import threading
 from typing import Any
 
 import firebase_admin
@@ -40,54 +40,50 @@ def _fix_private_key(d: dict) -> dict:
     return d
 
 
-def _timeout_handler(signum, frame):
-    """Raise exception when timeout is reached."""
-    raise TimeoutError("Firebase initialization timed out")
+def _init_firebase_with_timeout():
+    """Internal function to initialize Firebase with a timeout."""
+    global _db, _enabled
+    
+    try:
+        cred_dict = json.loads(settings.FIREBASE_CREDENTIALS_JSON)
+        cred_dict = _fix_private_key(cred_dict)
+
+        # Avoid re-initialising if already done (e.g. hot reload in dev)
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(cred_dict)
+            firebase_admin.initialize_app(cred)
+
+        _db = fb_firestore.client()
+        _enabled = True
+        project = settings.FIREBASE_PROJECT_ID or cred_dict.get("project_id", "")
+        logger.info("Firebase + Firestore initialised", project=project)
+    except Exception:
+        _db = None
+        _enabled = False
 
 
 def init_firebase() -> None:
     """Initialise firebase-admin app and Firestore client. Non-fatal if misconfigured.
     
-    Uses a 5-second timeout to prevent hanging on bad credentials.
+    Uses threading with a 5-second timeout to prevent hanging.
     """
     global _db, _enabled
 
     if not settings.FIREBASE_CREDENTIALS_JSON:
-        # Silently disable if not configured - no need to spam logs
+        # Silently disable if not configured
         _enabled = False
         return
 
-    try:
-        # Set a 5-second timeout for the entire init process
-        signal.signal(signal.SIGALRM, _timeout_handler)
-        signal.alarm(5)
-        
-        try:
-            cred_dict = json.loads(settings.FIREBASE_CREDENTIALS_JSON)
-            cred_dict = _fix_private_key(cred_dict)
-
-            # Avoid re-initialising if already done (e.g. hot reload in dev)
-            if not firebase_admin._apps:
-                cred = credentials.Certificate(cred_dict)
-                firebase_admin.initialize_app(cred)
-
-            _db = fb_firestore.client()
-            _enabled = True
-            project = settings.FIREBASE_PROJECT_ID or cred_dict.get("project_id", "")
-            logger.info("Firebase + Firestore initialised", project=project)
-        finally:
-            # Always cancel the alarm
-            signal.alarm(0)
-            
-    except TimeoutError:
-        # Timeout reached - silently disable
+    # Use threading for timeout instead of signal (more portable)
+    init_thread = threading.Thread(target=_init_firebase_with_timeout, daemon=True)
+    init_thread.start()
+    init_thread.join(timeout=5.0)  # Wait max 5 seconds
+    
+    if init_thread.is_alive():
+        # Timeout reached - thread still running
         _db = None
         _enabled = False
         logger.info("Firebase init timed out - disabled (non-critical)")
-    except Exception:
-        # Any other error - silently fail
-        _db = None
-        _enabled = False
 
 
 # ---- Public helpers --------------------------------------------------------

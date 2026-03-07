@@ -3,6 +3,9 @@ Ensemble scoring module.
 Combines all signal scores into a final threat_score with explainability.
 
 Configurable weights via environment variables.
+
+CRITICAL: When harm/extremism is very high (>80%), it should dominate
+the threat score regardless of other signals.
 """
 from typing import Optional, List, Dict
 from backend.app.core.config import settings
@@ -19,12 +22,28 @@ def compute_ensemble(
     """
     Deterministic ensemble scoring.
     Returns threat_score (0-1) and explainability breakdown.
+    
+    CRITICAL FIX: If harm/extremism score is very high (>80%), it should
+    heavily dominate the final threat score. Harmful content is the highest
+    priority threat regardless of AI detection scores.
     """
+    # Dynamic weight adjustment: if harm is very high, boost its importance dramatically
+    harm_boost = 1.0
+    if p_ext is not None and p_ext >= 0.80:
+        # Critical harm detected - boost weight by 3x
+        harm_boost = 3.0
+    elif p_ext is not None and p_ext >= 0.60:
+        # High harm - boost weight by 2x
+        harm_boost = 2.0
+    elif p_ext is not None and p_ext >= 0.40:
+        # Medium harm - boost weight by 1.5x
+        harm_boost = 1.5
+    
     signals = {
         "p_ai": {"value": p_ai, "weight": settings.WEIGHT_AI_DETECT, "desc": "AI-generated text probability"},
         "s_perp": {"value": s_perp, "weight": settings.WEIGHT_PERPLEXITY, "desc": "Perplexity anomaly score"},
         "s_embed_cluster": {"value": s_embed_cluster, "weight": settings.WEIGHT_EMBEDDING, "desc": "Embedding cluster outlier score"},
-        "p_ext": {"value": p_ext, "weight": settings.WEIGHT_EXTREMISM, "desc": "Extremism/harm probability"},
+        "p_ext": {"value": p_ext, "weight": settings.WEIGHT_EXTREMISM * harm_boost, "desc": "Extremism/harm probability"},
         "s_styl": {"value": s_styl, "weight": settings.WEIGHT_STYLOMETRY, "desc": "Stylometry anomaly score"},
         "p_watermark": {"value": p_watermark, "weight": settings.WEIGHT_WATERMARK, "desc": "Watermark detection (negative signal)"},
     }
@@ -62,6 +81,13 @@ def compute_ensemble(
         threat_score = max(0.0, min(1.0, weighted_sum / total_weight))
     else:
         threat_score = 0.0
+    
+    # Safety check: If harm is critically high (>90%), ensure threat score is at least 75%
+    if p_ext is not None and p_ext >= 0.90 and threat_score < 0.75:
+        threat_score = 0.75
+    # If harm is very high (>80%), ensure threat score is at least 65%
+    elif p_ext is not None and p_ext >= 0.80 and threat_score < 0.65:
+        threat_score = 0.65
 
     return {
         "threat_score": round(threat_score, 4),
