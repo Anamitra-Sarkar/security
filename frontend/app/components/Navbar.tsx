@@ -36,15 +36,24 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
 
         {/* Nav links */}
         <div className="hidden md:flex items-center gap-8">
-          {["Features", "Architecture", "Docs"].map((item) => (
-            <Link
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              className="text-sm text-slate-400 hover:text-white transition-colors duration-200"
-            >
-              {item}
-            </Link>
-          ))}
+          <Link
+            href="#features"
+            className="text-sm text-slate-400 hover:text-white transition-colors duration-200"
+          >
+            Features
+          </Link>
+          <Link
+            href="#architecture"
+            className="text-sm text-slate-400 hover:text-white transition-colors duration-200"
+          >
+            Architecture
+          </Link>
+          <Link
+            href="/docs"
+            className="text-sm text-slate-400 hover:text-white transition-colors duration-200"
+          >
+            Docs
+          </Link>
         </div>
 
         {/* CTA */}
