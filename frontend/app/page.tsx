@@ -1,10 +1,13 @@
 /**
- * Root page: shows Landing on first visit, transitions to Analyzer on "Try Now".
+ * Root page: shows new Hero landing on first visit, transitions to Analyzer on "Try Now".
  */
 "use client";
 import { useState } from "react";
-import Landing from "./components/Landing";
 import Analyzer from "./components/Analyzer";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import FeatureCards from "./components/FeatureCards";
+import CTASection from "./components/CTASection";
 import ThemeToggle from "./components/ThemeToggle";
 
 export default function Home() {
@@ -16,7 +19,12 @@ export default function Home() {
       {showApp ? (
         <Analyzer onBack={() => setShowApp(false)} />
       ) : (
-        <Landing onTryNow={() => setShowApp(true)} />
+        <>
+          <Navbar />
+          <Hero />
+          <FeatureCards />
+          <CTASection />
+        </>
       )}
     </main>
   );
