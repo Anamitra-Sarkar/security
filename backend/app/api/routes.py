@@ -192,7 +192,15 @@ async def get_result(result_id: str):
 
 @router.post("/assist", response_model=AssistResponse)
 async def assist_text(request: AssistRequest):
-    """Call Groq API to propose a rewrite of flagged text to reduce AI threat indicators."""
+    """Call Groq API to propose a rewrite of flagged text to reduce AI threat indicators.
+    
+    The AI Fixer should:
+    1. Make text sound more human and natural
+    2. Remove any harmful, offensive, or extreme language
+    3. Simplify overly complex or robotic phrasing
+    4. Maintain the original meaning and key information
+    5. Use casual, conversational language
+    """
     if not settings.GROQ_API_KEY:
         raise HTTPException(
             status_code=503,
@@ -206,11 +214,18 @@ async def assist_text(request: AssistRequest):
     logs: list[str] = []
     logs.append(f"Preparing rewrite request for Groq model: {settings.GROQ_MODEL}")
 
+    # Improved prompt that specifically targets reducing AI detection and harm scores
     prompt = (
-        "You are a text editor. Rewrite the following text to sound more natural and human-authored "
-        "while preserving the original meaning and factual content. "
-        "Return only the rewritten text without any explanation or commentary.\n\n"
-        f"Original text:\n{request.text}"
+        "You are a text editor helping to make writing sound more natural and human. "
+        "Rewrite the following text following these rules:\n\n"
+        "1. Use simple, casual, conversational language like a real person would write\n"
+        "2. Remove any offensive, harmful, hateful, or extreme language completely\n"
+        "3. Avoid robotic phrases, formal tone, or AI-typical patterns\n"
+        "4. Add small imperfections like informal contractions (e.g., 'it's', 'don't')\n"
+        "5. Keep the core meaning and key facts, but make it sound authentic\n"
+        "6. If the text is a greeting or simple message, keep it short and friendly\n\n"
+        "Return ONLY the rewritten text with no explanations, comments, or meta-text.\n\n"
+        f"Text to rewrite:\n{request.text}"
     )
 
     try:
@@ -226,12 +241,20 @@ async def assist_text(request: AssistRequest):
                     "model": settings.GROQ_MODEL,
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": 8192,
-                    "temperature": 0.7,
+                    "temperature": 0.8,  # Increased from 0.7 for more natural variation
                 },
             )
             response.raise_for_status()
             data = response.json()
             fixed_text = data["choices"][0]["message"]["content"].strip()
+            
+            # Remove any meta-commentary that the model might add
+            if fixed_text.startswith('Here') or fixed_text.startswith('Sure'):
+                # Try to extract just the rewritten text
+                lines = fixed_text.split('\n')
+                if len(lines) > 1:
+                    fixed_text = '\n'.join(lines[1:]).strip()
+            
             logs.append("Groq model returned rewritten text successfully.")
     except httpx.TimeoutException:
         logger.warning("Groq API timeout in /api/assist")

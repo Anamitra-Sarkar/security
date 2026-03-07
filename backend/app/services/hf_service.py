@@ -106,11 +106,13 @@ async def get_embeddings(text: str) -> list[float]:
 async def detect_harm(text: str) -> float:
     """Returns probability of harmful content (0-1). Non-fatal on failure.
     
-    The RoBERTa hate speech model returns labels like:
-    - 'hate' or 'hateful' for harmful content
-    - 'nothate' or 'not hate' for safe content
+    The RoBERTa hate speech model returns two types of labels:
+    - Labels indicating HARMFUL content: 'hate', 'hateful', 'toxic', 'harmful', 'offensive'
+    - Labels indicating SAFE content: 'nothate', 'not hate', 'not harmful', 'safe', 'neutral'
     
-    We need to return the score for the HARMFUL class, not just any matching label.
+    CRITICAL: We must return the probability of HARMFUL content.
+    If the model says "95% nothate", we return 5% (1 - 0.95).
+    If the model says "95% hate", we return 95%.
     """
     if not settings.HF_HARM_CLASSIFIER:
         return 0.0
@@ -120,33 +122,37 @@ async def detect_harm(text: str) -> float:
         if isinstance(result, list) and len(result) > 0:
             labels = result[0] if isinstance(result[0], list) else result
             
-            # First, try to find explicit harmful labels
+            # Strategy: Find the label that clearly indicates harm status
+            harmful_score = None
+            safe_score = None
+            
             for item in labels:
                 label = item.get("label", "").lower()
-                # Look for labels that indicate HARMFUL content
-                if any(k in label for k in ("hate", "hateful", "toxic", "harmful")):
-                    # Make sure it's NOT a "nothate" or "not harmful" label
-                    if not any(neg in label for neg in ("not", "no", "non")):
-                        return float(item["score"])
+                score = float(item.get("score", 0))
+                
+                # Check if this is a HARMFUL label (without negation)
+                is_harmful_label = any(k in label for k in ("hate", "hateful", "toxic", "harmful", "offensive", "label_1", "class_1"))
+                has_negation = any(neg in label for neg in ("not", "no", "non", "nothate"))
+                
+                if is_harmful_label and not has_negation:
+                    # This is a harmful label: use its score directly
+                    harmful_score = score
+                    break
+                elif has_negation or any(safe in label for safe in ("safe", "neutral", "label_0", "class_0")):
+                    # This is a safe label: we'll invert it if needed
+                    safe_score = score
             
-            # If we only found "nothate" labels, return inverse score
-            for item in labels:
-                label = item.get("label", "").lower()
-                if any(neg in label for neg in ("nothate", "not hate", "not harmful")):
-                    # Return 1 - score (if 95% not harmful, then 5% harmful)
-                    return float(1.0 - item["score"])
+            # Return the harmful probability
+            if harmful_score is not None:
+                return round(harmful_score, 4)
+            elif safe_score is not None:
+                # If we only have a "safe" probability, return 1 - safe_probability
+                return round(1.0 - safe_score, 4)
             
-            # Fallback: If model returns generic labels, assume lower score is safer
-            # Sort by score descending and check if highest is harmful
-            sorted_labels = sorted(labels, key=lambda x: x.get("score", 0), reverse=True)
-            if sorted_labels:
-                top_label = sorted_labels[0].get("label", "").lower()
-                if any(k in top_label for k in ("hate", "toxic", "harmful")) and \
-                   not any(neg in top_label for neg in ("not", "no", "non")):
-                    return float(sorted_labels[0]["score"])
-            
-            # If still no match, return 0 (safe)
+            # Fallback: If we can't determine, assume safe (return 0)
+            logger.warning("Could not determine harm classification from labels", labels=labels)
             return 0.0
+            
         return 0.0
     except Exception as e:
         logger.warning("HF harm classifier failed", error=str(e))
