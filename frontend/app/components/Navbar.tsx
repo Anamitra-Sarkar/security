@@ -36,7 +36,7 @@ export default function Navbar({ onGetStarted }: NavbarProps) {
 
         {/* Nav links */}
         <div className="hidden md:flex items-center gap-8">
-          {["Features", "Architecture", "Docs", "Pricing"].map((item) => (
+          {["Features", "Architecture", "Docs"].map((item) => (
             <Link
               key={item}
               href={`#${item.toLowerCase()}`}
