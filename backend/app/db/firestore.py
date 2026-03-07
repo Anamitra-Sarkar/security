@@ -17,6 +17,7 @@ Env vars required:
 from __future__ import annotations
 
 import json
+import signal
 from typing import Any
 
 import firebase_admin
@@ -39,8 +40,16 @@ def _fix_private_key(d: dict) -> dict:
     return d
 
 
+def _timeout_handler(signum, frame):
+    """Raise exception when timeout is reached."""
+    raise TimeoutError("Firebase initialization timed out")
+
+
 def init_firebase() -> None:
-    """Initialise firebase-admin app and Firestore client. Non-fatal if misconfigured."""
+    """Initialise firebase-admin app and Firestore client. Non-fatal if misconfigured.
+    
+    Uses a 5-second timeout to prevent hanging on bad credentials.
+    """
     global _db, _enabled
 
     if not settings.FIREBASE_CREDENTIALS_JSON:
@@ -49,20 +58,34 @@ def init_firebase() -> None:
         return
 
     try:
-        cred_dict = json.loads(settings.FIREBASE_CREDENTIALS_JSON)
-        cred_dict = _fix_private_key(cred_dict)
+        # Set a 5-second timeout for the entire init process
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(5)
+        
+        try:
+            cred_dict = json.loads(settings.FIREBASE_CREDENTIALS_JSON)
+            cred_dict = _fix_private_key(cred_dict)
 
-        # Avoid re-initialising if already done (e.g. hot reload in dev)
-        if not firebase_admin._apps:
-            cred = credentials.Certificate(cred_dict)
-            firebase_admin.initialize_app(cred)
+            # Avoid re-initialising if already done (e.g. hot reload in dev)
+            if not firebase_admin._apps:
+                cred = credentials.Certificate(cred_dict)
+                firebase_admin.initialize_app(cred)
 
-        _db = fb_firestore.client()
-        _enabled = True
-        project = settings.FIREBASE_PROJECT_ID or cred_dict.get("project_id", "")
-        logger.info("Firebase + Firestore initialised", project=project)
+            _db = fb_firestore.client()
+            _enabled = True
+            project = settings.FIREBASE_PROJECT_ID or cred_dict.get("project_id", "")
+            logger.info("Firebase + Firestore initialised", project=project)
+        finally:
+            # Always cancel the alarm
+            signal.alarm(0)
+            
+    except TimeoutError:
+        # Timeout reached - silently disable
+        _db = None
+        _enabled = False
+        logger.info("Firebase init timed out - disabled (non-critical)")
     except Exception:
-        # Silently fail - Firestore is optional, no need to spam logs
+        # Any other error - silently fail
         _db = None
         _enabled = False
 
