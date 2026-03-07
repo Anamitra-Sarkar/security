@@ -23,7 +23,7 @@ const signalCards = [
     ),
     label: "AI Detection",
     value: "Active",
-    dot: "bg-teal-400",
+    dot: "bg-teal-500",
   },
   {
     icon: (
@@ -33,7 +33,7 @@ const signalCards = [
     ),
     label: "Perplexity",
     value: "High",
-    dot: "bg-amber-400",
+    dot: "bg-amber-500",
   },
   {
     icon: (
@@ -45,7 +45,7 @@ const signalCards = [
     ),
     label: "Stylometry",
     value: "Drift",
-    dot: "bg-violet-400",
+    dot: "bg-violet-500",
   },
 ];
 
@@ -58,20 +58,28 @@ export default function Hero({ onTryNow }: HeroProps) {
   };
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-[#060f23] via-[#071628] to-[#06201e] overflow-hidden">
+    <section className="relative min-h-screen overflow-hidden" style={{ background: 'var(--background)' }}>
+      {/* Subtle gradient overlay */}
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%)'
+        }}
+      />
+
       {/* Subtle grid overlay */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+            "linear-gradient(rgba(30,64,175,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(30,64,175,0.3) 1px, transparent 1px)",
           backgroundSize: "64px 64px",
         }}
       />
 
       {/* Ambient glow blobs */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-teal-500/8 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-teal-400/6 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-6 pt-32 pb-20">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -83,8 +91,8 @@ export default function Hero({ onTryNow }: HeroProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-300 text-xs font-medium tracking-wide">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/40 bg-teal-500/10 text-teal-700 text-xs font-medium tracking-wide">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
                 AI Threat Detection · v2.1
               </span>
             </motion.div>
@@ -94,11 +102,12 @@ export default function Hero({ onTryNow }: HeroProps) {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight font-[Sora,Inter,sans-serif]"
+              className="text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight font-[Sora,Inter,sans-serif]"
+              style={{ color: 'var(--foreground)' }}
             >
               Detect AI Misuse
               <br />
-              <span className="bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
                 Before It Spreads
               </span>
             </motion.h1>
@@ -108,7 +117,8 @@ export default function Hero({ onTryNow }: HeroProps) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-slate-400 text-lg leading-relaxed max-w-md"
+              className="text-lg leading-relaxed max-w-md"
+              style={{ color: 'var(--muted)' }}
             >
               Zynera analyzes text using multiple signals — AI detection,
               perplexity scoring, semantic clustering, and stylometry — to
@@ -133,7 +143,11 @@ export default function Hero({ onTryNow }: HeroProps) {
               </button>
               <button
                 onClick={scrollToArchitecture}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-slate-300 text-sm font-medium hover:border-white/20 hover:text-white hover:-translate-y-0.5 transition-all duration-200"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border text-sm font-medium hover:-translate-y-0.5 transition-all duration-200"
+                style={{ 
+                  borderColor: 'var(--card-border)',
+                  color: 'var(--muted)'
+                }}
               >
                 View Architecture
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -155,8 +169,8 @@ export default function Hero({ onTryNow }: HeroProps) {
                 { value: "99.2%", label: "Accuracy" },
               ].map((stat) => (
                 <div key={stat.label} className="flex flex-col gap-0.5">
-                  <span className="text-white font-bold text-lg">{stat.value}</span>
-                  <span className="text-slate-500 text-xs">{stat.label}</span>
+                  <span className="font-bold text-lg" style={{ color: 'var(--foreground)' }}>{stat.value}</span>
+                  <span className="text-xs" style={{ color: 'var(--muted)' }}>{stat.label}</span>
                 </div>
               ))}
             </motion.div>
@@ -170,33 +184,43 @@ export default function Hero({ onTryNow }: HeroProps) {
             className="relative"
           >
             {/* Main dashboard card */}
-            <div className="rounded-2xl border border-white/8 bg-[#0b1628]/80 shadow-2xl shadow-black/40 overflow-hidden">
+            <div 
+              className="rounded-2xl border shadow-2xl overflow-hidden"
+              style={{
+                borderColor: 'var(--card-border)',
+                background: 'var(--card-bg)',
+                boxShadow: 'var(--shadow-lg)'
+              }}
+            >
               {/* Window chrome */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/6 bg-[#0d1b2e]/60">
-                <div className="w-3 h-3 rounded-full bg-red-500/70" />
-                <div className="w-3 h-3 rounded-full bg-amber-500/70" />
-                <div className="w-3 h-3 rounded-full bg-green-500/70" />
-                <span className="ml-3 text-slate-500 text-xs font-mono">zynera · analysis · live</span>
+              <div 
+                className="flex items-center gap-2 px-4 py-3 border-b"
+                style={{ borderColor: 'var(--card-border)', background: '#F8FAFC' }}
+              >
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-amber-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <span className="ml-3 text-xs font-mono" style={{ color: 'var(--muted)' }}>zynera · analysis · live</span>
               </div>
 
               <div className="p-6 space-y-5">
                 {/* Threat score header */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Threat Score</p>
+                    <p className="text-xs uppercase tracking-wider mb-1" style={{ color: 'var(--muted)' }}>Threat Score</p>
                     <div className="flex items-end gap-2">
-                      <span className="text-5xl font-bold text-rose-400 font-[Sora,Inter,sans-serif]">72</span>
-                      <span className="text-slate-400 text-sm mb-1">/100</span>
+                      <span className="text-5xl font-bold text-rose-500 font-[Sora,Inter,sans-serif]">72</span>
+                      <span className="text-sm mb-1" style={{ color: 'var(--muted)' }}>/100</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/25 text-rose-300 text-xs font-medium">HIGH RISK</span>
-                    <span className="text-slate-600 text-xs">Updated 0.3s ago</span>
+                    <span className="px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-700 text-xs font-medium">HIGH RISK</span>
+                    <span className="text-xs" style={{ color: 'var(--muted)' }}>Updated 0.3s ago</span>
                   </div>
                 </div>
 
                 {/* Threat score bar */}
-                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: "72%" }}
@@ -210,10 +234,10 @@ export default function Hero({ onTryNow }: HeroProps) {
                   {signals.map((s, i) => (
                     <div key={s.label}>
                       <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-slate-400 text-xs">{s.label}</span>
-                        <span className="text-slate-300 text-xs font-mono">{s.value}%</span>
+                        <span className="text-xs" style={{ color: 'var(--muted)' }}>{s.label}</span>
+                        <span className="text-xs font-mono" style={{ color: 'var(--foreground)' }}>{s.value}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: '#E2E8F0' }}>
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${s.value}%` }}
@@ -230,27 +254,31 @@ export default function Hero({ onTryNow }: HeroProps) {
                   {signalCards.map((card) => (
                     <div
                       key={card.label}
-                      className="rounded-xl bg-white/3 border border-white/6 p-3 flex flex-col gap-2"
+                      className="rounded-xl border p-3 flex flex-col gap-2"
+                      style={{
+                        background: '#F8FAFC',
+                        borderColor: 'var(--card-border)'
+                      }}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400">{card.icon}</span>
+                        <span style={{ color: 'var(--muted)' }}>{card.icon}</span>
                         <span className={`w-1.5 h-1.5 rounded-full ${card.dot}`} />
                       </div>
                       <div>
-                        <p className="text-slate-500 text-[10px] uppercase tracking-wide">{card.label}</p>
-                        <p className="text-white text-xs font-semibold mt-0.5">{card.value}</p>
+                        <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--muted)' }}>{card.label}</p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--foreground)' }}>{card.value}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
                 {/* Bottom status bar */}
-                <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: 'var(--card-border)' }}>
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                    <span className="text-slate-500 text-xs">Ensemble model active</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                    <span className="text-xs" style={{ color: 'var(--muted)' }}>Ensemble model active</span>
                   </div>
-                  <span className="text-slate-600 text-xs font-mono">5 signals · async</span>
+                  <span className="text-xs font-mono" style={{ color: 'var(--muted)' }}>5 signals · async</span>
                 </div>
               </div>
             </div>
@@ -260,16 +288,20 @@ export default function Hero({ onTryNow }: HeroProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.9 }}
-              className="absolute -bottom-4 -left-6 rounded-xl border border-white/8 bg-[#0b1628]/90 shadow-xl p-3 flex items-center gap-3"
+              className="absolute -bottom-4 -left-6 rounded-xl border shadow-xl p-3 flex items-center gap-3"
+              style={{
+                borderColor: 'var(--card-border)',
+                background: 'var(--card-bg)'
+              }}
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500/20 to-blue-500/20 border border-teal-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500/20 to-blue-500/20 border border-teal-500/30 flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 7h10M7 2v10" stroke="#2dd4bf" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M2 7h10M7 2v10" stroke="#14b8a6" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
               <div>
-                <p className="text-white text-xs font-medium">New threat detected</p>
-                <p className="text-slate-500 text-[10px]">Confidence 94% · 12ms</p>
+                <p className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>New threat detected</p>
+                <p className="text-[10px]" style={{ color: 'var(--muted)' }}>Confidence 94% · 12ms</p>
               </div>
             </motion.div>
           </motion.div>
