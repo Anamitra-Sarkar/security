@@ -19,8 +19,8 @@
   --sentinel-indigo: #5C6BC0;
   --sentinel-magenta: #E040FB;
 
-  /* Surfaces */
-  --background: #F5FBFF;
+  /* Surfaces - Updated to medium light blue */
+  --background: #DBEAFE;
   --foreground: #0F172A;
   --card-bg: #FFFFFF;
   --card-border: #BFDBFE;
@@ -37,17 +37,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-[data-theme="dark"] {
-  --background: #0F172A;
-  --foreground: #F0F9FF;
-  --card-bg: #1E293B;
-  --card-border: #1E3A5F;
-  --muted: #94A3B8;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
 }
 
 body {
@@ -110,21 +99,6 @@ body {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
-
-/* Theme toggle button */
-.theme-toggle {
-  background: #FFFFFF;
-  color: #1E40AF;
-}
-[data-theme="dark"] .theme-toggle {
-  background: #1E293B;
-  color: #10B981;
-}
-/* Sun icon shown in dark mode; moon icon shown in light mode */
-.theme-sun { display: none; }
-.theme-moon { display: block; }
-[data-theme="dark"] .theme-sun { display: block; }
-[data-theme="dark"] .theme-moon { display: none; }
 
 /* ── Robot Animator ──────────────────────────────────────────────────────── */
 
