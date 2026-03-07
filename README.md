@@ -13,11 +13,11 @@ A production-ready system for detecting and mitigating misuse of Large Language 
 └───────────────────────────┬──────────────────────────────────────┘
                             │ HTTPS (REST API)
 ┌───────────────────────────▼──────────────────────────────────────┐
-│                       BACKEND (Render)                            │
+│                 BACKEND (Hugging Face Space)                     │
 │  FastAPI + Uvicorn                                               │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────────┐    │
-│  │  /api/analyze│  │ /api/auth/*  │  │ /health  /metrics    │    │
-│  └──────┬──────┘  └──────────────┘  └──────────────────────┘    │
+│  ┌─────────────┐                      ┌──────────────────────┐   │
+│  │ /api/analyze│                      │ /health  /metrics    │   │
+│  └──────┬──────┘                      └──────────────────────┘   │
 │         │                                                        │
 │  ┌──────▼──────────────────────────────────────────────────┐    │
 │  │              Analysis Pipeline                           │    │
@@ -29,8 +29,8 @@ A production-ready system for detecting and mitigating misuse of Large Language 
 │  └─────────────────────────────────────────────────────────┘    │
 │         │                                                        │
 │  ┌──────▼──────┐  ┌────────────┐  ┌──────────────────────┐     │
-│  │  PostgreSQL  │  │   Redis    │  │  Worker (Redis Queue)│     │
-│  │  (Render DB) │  │ (Upstash)  │  │  Async inference     │     │
+│  │ In-memory   │  │   Redis    │  │  Worker (Redis Queue)│     │
+│  │ result store│  │ (Upstash)  │  │  Async inference     │     │
 │  └─────────────┘  └────────────┘  └──────────────────────┘     │
 └──────────────────────────────────────────────────────────────────┘
          │                              │
@@ -69,8 +69,6 @@ Signals are combined with configurable weights:
 | POST | `/api/analyze` | Analyze single text, returns threat_score + signals |
 | POST | `/api/analyze/bulk` | Analyze up to 20 texts |
 | GET | `/api/results/{id}` | Get stored analysis result |
-| POST | `/api/auth/register` | Register new user |
-| POST | `/api/auth/login` | Login, get JWT token |
 | GET | `/health` | Health check |
 | GET | `/metrics` | Prometheus metrics |
 
@@ -78,20 +76,16 @@ Signals are combined with configurable weights:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `FIRESTORE_AUTO_INIT` | Set to `false` to skip Firestore init at startup (prevents google.auth JWT errors when credentials are absent) | No (default `true`) |
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `REDIS_URL` | Redis URL (Upstash/RedisCloud) | Yes |
 | `HF_API_KEY` | Hugging Face API token | Yes |
 | `GROQ_API_KEY` | Groq API key | Yes |
-| `JWT_SECRET` | Secret for JWT signing | Yes |
 | `SENTRY_DSN` | Sentry DSN for error tracking | No |
 | `CORS_ORIGINS` | Comma-separated allowed origins | No |
 | `QDRANT_URL` | Qdrant vector DB URL | No |
 | `QDRANT_API_KEY` | Qdrant API key | No |
 | `NEXT_PUBLIC_API_URL` | Backend API URL for frontend | Frontend |
-| `RENDER_SERVICE_ID` | Render service ID for deploys | CI/CD |
 | `VERCEL_TOKEN` | Vercel deploy token | CI/CD |
-| `HF_SPACE_REPO_URL` | HF Space repo (user/space) | CI/CD |
+| `HF_API_KEY` | Hugging Face access token used by CI deploys and inference | CI/CD + Backend |
 
 ## Quick Start (Local Development)
 
@@ -113,28 +107,28 @@ python -m pytest backend/tests/ -v
 
 ## Deploy Steps
 
-### Backend (Render)
-1. Connect repo to Render
-2. Render auto-detects `render.yaml`
-3. Set environment variables in Render dashboard
-4. Deploy triggers automatically on push to `main`
+### Backend (Hugging Face Space)
+1. Create a Docker Space
+2. Set Space secrets (`REDIS_URL`, `HF_API_KEY`, `GROQ_API_KEY`, `CORS_ORIGINS`, optional `QDRANT_URL`, `QDRANT_API_KEY`, `SENTRY_DSN`)
+3. GitHub Actions syncs `Dockerfile.hf_space` and `backend/` to the Space on push to `main`
+4. The backend serves FastAPI on port `7860`
 
 ### Frontend (Vercel)
 1. Import repo in Vercel
 2. Set root directory to `frontend`
-3. Set `NEXT_PUBLIC_API_URL` to your Render backend URL
+3. Set `NEXT_PUBLIC_API_URL` to your Hugging Face Space backend URL
 4. Deploy triggers automatically on push to `main`
 
 ### HF Space Sync
 1. Create a Hugging Face Space
-2. Set `HF_API_KEY` and `HF_SPACE_REPO_URL` in GitHub secrets
-3. The `hf_space_sync.yml` workflow pushes to HF on every push to `main`
+2. Set `HF_API_KEY` in GitHub secrets
+3. The `ci.yml` workflow pushes the backend to HF on every push to `main`
 
 ## Smoke Tests
 
 ```bash
 # After deployment, run:
-bash scripts/smoke_test.sh https://your-backend-url.onrender.com
+bash scripts/smoke_test.sh https://your-backend-url.hf.space
 ```
 
 ## Testing

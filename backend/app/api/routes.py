@@ -1,7 +1,7 @@
 """
 Main API routes for the LLM Misuse Detection system.
 Endpoints: /api/analyze, /api/analyze/bulk, /api/results/{id}
-Persistence: Firestore via REST helpers.
+Persistence: in-process result storage helpers.
 """
 import hashlib
 import json
@@ -117,7 +117,7 @@ async def _analyze_text(text: str, user_id: str | None = None) -> dict:
         saved = await save_document(COLLECTION, doc.id, doc.to_dict())
         result["id"] = doc.id if saved else text_hash
     except Exception:
-        # Silently skip Firestore - it's optional
+        # Silently skip persistence - it's optional
         result["id"] = text_hash
 
     return result
@@ -168,7 +168,7 @@ async def bulk_analyze(request: BulkAnalyzeRequest):
 
 @router.get("/results/{result_id}", response_model=AnalyzeResponse)
 async def get_result(result_id: str):
-    """Fetch a previously computed analysis result by Firestore document ID."""
+    """Fetch a previously computed analysis result by stored result ID."""
     data = await get_document(COLLECTION, result_id)
     if not data:
         raise HTTPException(status_code=404, detail="Result not found")

@@ -178,7 +178,7 @@ export default function DocsPage() {
               transition={{ delay: 0.4 }}
               className="text-slate-700 leading-relaxed"
             >
-              Built with a modern tech stack including Next.js 16, FastAPI, and distributed across Vercel and Render for optimal performance and scalability. The system uses only pretrained models via Hugging Face Inference Endpoints and Groq Llama API — no training required.
+              Built with a modern tech stack including Next.js 16, FastAPI, and distributed across Vercel and Hugging Face Spaces for optimal performance and scalability. The system uses only pretrained models via Hugging Face Inference Endpoints and Groq Llama API — no training required.
             </motion.p>
           </motion.div>
 
@@ -404,9 +404,9 @@ export default function DocsPage() {
                 ]},
                 { title: "Backend", color: "teal", items: [
                   { label: "Framework:", value: "FastAPI + Uvicorn" },
-                  { label: "Database:", value: "PostgreSQL (Render)" },
+                  { label: "Result Store:", value: "In-memory recent result cache" },
                   { label: "Cache:", value: "Redis (Upstash)" },
-                  { label: "Hosting:", value: "Render with auto-scaling" }
+                  { label: "Hosting:", value: "Hugging Face Spaces (Docker)" }
                 ]},
                 { title: "ML Infrastructure", color: "purple", items: [
                   { label: "Inference:", value: "Hugging Face Inference Endpoints" },

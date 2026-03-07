@@ -14,12 +14,6 @@ class Settings(BaseSettings):
     APP_NAME: str = "Zynera"
     DEBUG: bool = False
 
-    # Firebase
-    FIREBASE_PROJECT_ID: str = ""
-    FIREBASE_CREDENTIALS_JSON: Optional[str] = None
-    # Set to False to skip Firestore init at startup (useful when credentials are absent)
-    FIRESTORE_AUTO_INIT: bool = True
-
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
@@ -28,10 +22,10 @@ class Settings(BaseSettings):
 
     # HuggingFace
     HF_API_KEY: str = ""
-    HF_DETECTOR_PRIMARY: str = f"{_HF_ROUTER}/Hello-SimpleAI/chatgpt-detector-roberta"
-    HF_DETECTOR_FALLBACK: str = ""
-    HF_EMBEDDINGS_PRIMARY: str = ""
-    HF_EMBEDDINGS_FALLBACK: str = ""
+    HF_DETECTOR_PRIMARY: str = f"{_HF_ROUTER}/desklib/ai-text-detector-v1.01"
+    HF_DETECTOR_FALLBACK: str = f"{_HF_ROUTER}/fakespot-ai/roberta-base-ai-text-detection-v1"
+    HF_EMBEDDINGS_PRIMARY: str = f"{_HF_ROUTER}/sentence-transformers/all-mpnet-base-v2"
+    HF_EMBEDDINGS_FALLBACK: str = f"{_HF_ROUTER}/sentence-transformers/all-MiniLM-L6-v2"
     HF_HARM_CLASSIFIER: str = f"{_HF_ROUTER}/facebook/roberta-hate-speech-dynabench-r4-target"
 
     # Groq

@@ -2,9 +2,6 @@
 FastAPI main application entry point.
 Configures CORS, secure headers, routes, and observability.
 
-Auth: Firebase Auth (frontend issues ID tokens; backend verifies via firebase-admin)
-DB:   Firestore (via firebase-admin SDK)
-
 Env vars: All from core/config.py
 Run: uvicorn backend.app.main:app --host 0.0.0.0 --port 7860
 """
@@ -19,7 +16,6 @@ from backend.app.core.config import settings
 from backend.app.core.logging import setup_logging, get_logger
 from backend.app.api.routes import router as analysis_router
 from backend.app.api.models import HealthResponse
-from backend.app.db.firestore import init_firebase
 
 # Sentry (optional)
 if settings.SENTRY_DSN:
@@ -38,10 +34,6 @@ REQUEST_LATENCY = Histogram("http_request_duration_seconds", "Request latency", 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting Zynera API")
-    if settings.FIRESTORE_AUTO_INIT:
-        init_firebase()
-    else:
-        logger.info("Firestore auto-init disabled (FIRESTORE_AUTO_INIT=false) – skipping")
     yield
     logger.info("Shutting down")
 

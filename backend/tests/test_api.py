@@ -1,6 +1,6 @@
 """
 Integration tests for the API endpoints with mocked external services.
-Tests /api/analyze, /health, /metrics — no real Firebase, Firestore, or Redis needed.
+Tests /api/analyze, /health, /metrics — no external auth, persistence, or Redis needed.
 """
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -8,10 +8,8 @@ from fastapi.testclient import TestClient
 
 
 def _make_client():
-    """Build a TestClient with Firebase init and Firestore writes mocked out."""
-    # Patch init_firebase and the _enabled flag so the app starts without real credentials
-    with patch("backend.app.db.firestore.init_firebase"), \
-         patch("backend.app.db.firestore._enabled", True), \
+    """Build a TestClient with persistence and external calls mocked out."""
+    with patch("backend.app.db.firestore._enabled", True), \
          patch("backend.app.db.firestore.save_document", new_callable=AsyncMock, return_value=True), \
          patch("backend.app.db.firestore.get_document", new_callable=AsyncMock, return_value=None):
         from backend.app.main import app
@@ -27,40 +25,26 @@ def client():
     return c
 
 
-class TestStartupWithoutCredentials:
-    """Verify the server starts cleanly when no GCP/Firebase credentials are present."""
+class TestStartup:
+    """Verify the server starts cleanly without auth or external storage."""
 
-    def test_health_returns_200_without_firebase_credentials(self):
-        """App must start and /health must return 200 even without Firebase credentials."""
-        # Use the same safe mock pattern as _make_client() – no real credentials needed
+    def test_health_returns_200_on_startup(self):
+        """App must start and /health must return 200 with default settings."""
         c, _ = _make_client()
         response = c.get("/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "ok"
 
-    def test_firestore_auto_init_false_skips_init(self):
-        """When FIRESTORE_AUTO_INIT is False, init_firebase must not be invoked at startup."""
-        from backend.app.main import app as _app
-        from backend.app.core import config
+    @pytest.mark.asyncio
+    async def test_in_memory_storage_round_trip(self):
+        """Recent analysis results should still be retrievable without Firestore."""
+        from backend.app.db.firestore import save_document, get_document, _db
 
-        original = config.settings.FIRESTORE_AUTO_INIT
-        try:
-            config.settings.FIRESTORE_AUTO_INIT = False
-            with patch("backend.app.db.firestore.init_firebase") as mock_init:
-                # Simulate a lifespan startup by calling the lifespan coroutine
-                import asyncio
-                from contextlib import asynccontextmanager
-
-                async def run_lifespan():
-                    from backend.app.main import lifespan
-                    async with lifespan(_app):
-                        pass
-
-                asyncio.run(run_lifespan())
-                mock_init.assert_not_called()
-        finally:
-            config.settings.FIRESTORE_AUTO_INIT = original
+        _db.clear()
+        payload = {"id": "abc123", "status": "done", "threat_score": 0.42}
+        assert await save_document("analysis_results", "abc123", payload) is True
+        assert await get_document("analysis_results", "abc123") == payload
 
 
 class TestHealthEndpoint:
@@ -182,42 +166,16 @@ class TestAssistEndpoint:
             config.settings.GROQ_API_KEY = original
 
 
-class TestFirestoreRefreshError:
-    """Verify RefreshError is logged at DEBUG, not WARNING."""
+class TestModelConfiguration:
+    def test_default_models_match_documented_endpoints(self):
+        """Default backend model settings should match the documented README models."""
+        from backend.app.core.config import settings
 
-    @pytest.mark.asyncio
-    async def test_save_document_refresh_error_returns_false(self):
-        """RefreshError in save_document should return False without raising."""
-        import google.auth.exceptions
-        from unittest.mock import MagicMock, patch
-
-        mock_db = MagicMock()
-        mock_db.collection.return_value.document.return_value.set.side_effect = (
-            google.auth.exceptions.RefreshError("invalid_grant: Invalid JWT Signature")
-        )
-
-        with patch("backend.app.db.firestore._enabled", True), \
-             patch("backend.app.db.firestore._db", mock_db):
-            from backend.app.db.firestore import save_document
-            result = await save_document("test_col", "test_doc", {"key": "value"})
-            assert result is False
-
-    @pytest.mark.asyncio
-    async def test_get_document_refresh_error_returns_none(self):
-        """RefreshError in get_document should return None without raising."""
-        import google.auth.exceptions
-        from unittest.mock import MagicMock, patch
-
-        mock_db = MagicMock()
-        mock_db.collection.return_value.document.return_value.get.side_effect = (
-            google.auth.exceptions.RefreshError("invalid_grant: Invalid JWT Signature")
-        )
-
-        with patch("backend.app.db.firestore._enabled", True), \
-             patch("backend.app.db.firestore._db", mock_db):
-            from backend.app.db.firestore import get_document
-            result = await get_document("test_col", "test_doc")
-            assert result is None
+        assert settings.HF_DETECTOR_PRIMARY.endswith("/desklib/ai-text-detector-v1.01")
+        assert settings.HF_DETECTOR_FALLBACK.endswith("/fakespot-ai/roberta-base-ai-text-detection-v1")
+        assert settings.HF_EMBEDDINGS_PRIMARY.endswith("/sentence-transformers/all-mpnet-base-v2")
+        assert settings.HF_EMBEDDINGS_FALLBACK.endswith("/sentence-transformers/all-MiniLM-L6-v2")
+        assert settings.HF_HARM_CLASSIFIER.endswith("/facebook/roberta-hate-speech-dynabench-r4-target")
 
 
 class TestAttackSimulations:
