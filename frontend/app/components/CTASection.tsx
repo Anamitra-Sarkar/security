@@ -3,7 +3,11 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function CTASection() {
+interface CTASectionProps {
+  onTryNow?: () => void;
+}
+
+export default function CTASection({ onTryNow }: CTASectionProps) {
   return (
     <section className="relative bg-[#050d1a] py-28 px-6 overflow-hidden">
       {/* Background glow */}
@@ -41,15 +45,15 @@ export default function CTASection() {
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="#"
+          <button
+            onClick={onTryNow}
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-gradient-to-r from-blue-600 to-teal-500 text-white font-semibold shadow-xl shadow-blue-500/25 hover:shadow-blue-500/45 hover:-translate-y-1 transition-all duration-200"
           >
             Try Zynera Now
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M3 8h10M9 4l4 4-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </Link>
+          </button>
           <Link
             href="#architecture"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg border border-white/10 text-slate-300 text-sm font-medium hover:border-white/20 hover:text-white hover:-translate-y-0.5 transition-all duration-200"

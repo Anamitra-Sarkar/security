@@ -3,7 +3,11 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function Navbar() {
+interface NavbarProps {
+  onGetStarted?: () => void;
+}
+
+export default function Navbar({ onGetStarted }: NavbarProps) {
   return (
     <motion.nav
       initial={{ opacity: 0, y: -16 }}
@@ -51,12 +55,12 @@ export default function Navbar() {
           >
             Sign in
           </Link>
-          <Link
-            href="#"
+          <button
+            onClick={onGetStarted}
             className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-teal-500 text-white font-medium shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-200"
           >
             Get Started
-          </Link>
+          </button>
         </div>
       </div>
     </motion.nav>

@@ -3,6 +3,10 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 
+interface HeroProps {
+  onTryNow?: () => void;
+}
+
 const signals = [
   { label: "AI Probability", value: 87, color: "from-rose-500 to-red-400" },
   { label: "Perplexity Anomaly", value: 73, color: "from-amber-500 to-orange-400" },
@@ -46,7 +50,7 @@ const signalCards = [
   },
 ];
 
-export default function Hero() {
+export default function Hero({ onTryNow }: HeroProps) {
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-[#060f23] via-[#071628] to-[#06201e] overflow-hidden">
       {/* Subtle grid overlay */}
@@ -112,15 +116,15 @@ export default function Hero() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex flex-wrap items-center gap-4"
             >
-              <Link
-                href="#"
+              <button
+                onClick={onTryNow}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-teal-500 text-white font-semibold text-sm shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-200"
               >
                 Try Zynera Now
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </Link>
+              </button>
               <Link
                 href="#architecture"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-white/10 text-slate-300 text-sm font-medium hover:border-white/20 hover:text-white hover:-translate-y-0.5 transition-all duration-200"

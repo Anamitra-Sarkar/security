@@ -13,19 +13,22 @@ import ThemeToggle from "./components/ThemeToggle";
 export default function Home() {
   const [showApp, setShowApp] = useState(false);
 
+  if (showApp) {
+    return (
+      <main>
+        <ThemeToggle />
+        <Analyzer onBack={() => setShowApp(false)} />
+      </main>
+    );
+  }
+
   return (
     <main>
       <ThemeToggle />
-      {showApp ? (
-        <Analyzer onBack={() => setShowApp(false)} />
-      ) : (
-        <>
-          <Navbar />
-          <Hero />
-          <FeatureCards />
-          <CTASection />
-        </>
-      )}
+      <Navbar onGetStarted={() => setShowApp(true)} />
+      <Hero onTryNow={() => setShowApp(true)} />
+      <FeatureCards />
+      <CTASection onTryNow={() => setShowApp(true)} />
     </main>
   );
 }
