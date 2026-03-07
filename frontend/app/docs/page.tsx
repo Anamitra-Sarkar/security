@@ -2,7 +2,57 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Shield, Brain, Database, Zap, Target, GitBranch } from "lucide-react";
+
+// Custom SVG Icons
+const ArrowLeft = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+);
+
+const Shield = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+
+const Brain = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
+    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
+  </svg>
+);
+
+const Database = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+  </svg>
+);
+
+const Zap = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
+
+const Target = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <circle cx="12" cy="12" r="6"/>
+    <circle cx="12" cy="12" r="2"/>
+  </svg>
+);
+
+const GitBranch = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="6" y1="3" x2="6" y2="15"/>
+    <circle cx="18" cy="6" r="3"/>
+    <circle cx="6" cy="18" r="3"/>
+    <path d="M18 9a9 9 0 0 1-9 9"/>
+  </svg>
+);
 
 export default function DocsPage() {
   return (
@@ -19,7 +69,7 @@ export default function DocsPage() {
             href="/"
             className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors duration-200"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft />
             <span className="text-sm font-medium">Back to Home</span>
           </Link>
           <div className="flex items-center gap-2.5">
@@ -70,7 +120,7 @@ export default function DocsPage() {
             className="mb-12 p-8 rounded-2xl bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/10 backdrop-blur-sm"
           >
             <h2 className="text-3xl font-bold mb-4 flex items-center gap-3">
-              <Shield className="w-8 h-8 text-blue-400" />
+              <Shield />
               System Overview
             </h2>
             <p className="text-slate-300 leading-relaxed mb-4">
@@ -89,7 +139,7 @@ export default function DocsPage() {
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <Brain className="w-8 h-8 text-teal-400" />
+              <Brain />
               Model Architectures
             </h2>
             <div className="grid gap-6">
@@ -151,7 +201,7 @@ export default function DocsPage() {
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <GitBranch className="w-8 h-8 text-indigo-400" />
+              <GitBranch />
               Analysis Pipeline
             </h2>
             <div className="p-8 rounded-2xl bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/10">
@@ -203,7 +253,7 @@ export default function DocsPage() {
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <Target className="w-8 h-8 text-yellow-400" />
+              <Target />
               Ensemble Scoring
             </h2>
             <div className="p-8 rounded-2xl bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/10">
@@ -268,7 +318,7 @@ export default function DocsPage() {
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <Database className="w-8 h-8 text-green-400" />
+              <Database />
               Infrastructure Stack
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -367,7 +417,7 @@ export default function DocsPage() {
             className="mb-12"
           >
             <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <Zap className="w-8 h-8 text-orange-400" />
+              <Zap />
               API Reference
             </h2>
             <div className="space-y-4">
