@@ -1,6 +1,6 @@
 """
 Pydantic request/response models for the API.
-Auth is handled entirely by Firebase on the frontend — no auth models here.
+Authentication is not part of the public API.
 """
 from pydantic import BaseModel, Field
 from typing import List, Optional

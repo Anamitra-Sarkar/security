@@ -8,17 +8,15 @@ All secrets are managed via environment variables. **Never commit secrets to sou
 
 | Secret | Purpose | Rotation Frequency |
 |--------|---------|-------------------|
-| `JWT_SECRET` | Signs authentication tokens | Every 90 days |
 | `HF_API_KEY` | Hugging Face Inference API access | Every 90 days |
 | `GROQ_API_KEY` | Groq LLM API access | Every 90 days |
-| `DATABASE_URL` | PostgreSQL connection (includes password) | On compromise |
 | `REDIS_URL` | Redis connection (includes password) | On compromise |
 | `SENTRY_DSN` | Error tracking | Rarely |
 
 ### Secret Rotation Procedure
 
 1. Generate new secret value
-2. Update in deployment platform (Render/Vercel) environment settings
+2. Update in deployment platform (Hugging Face Spaces/Vercel) environment settings
 3. Redeploy affected services
 4. Verify health checks pass
 5. Revoke old secret value at the provider
@@ -26,9 +24,8 @@ All secrets are managed via environment variables. **Never commit secrets to sou
 ### GitHub Actions Secrets
 
 Set in repository Settings → Secrets and variables → Actions:
-- `RENDER_SERVICE_ID`, `RENDER_API_KEY` – for backend deploy
 - `VERCEL_TOKEN` – for frontend deploy
-- `HF_API_KEY`, `HF_SPACE_REPO_URL` – for HF Space sync
+- `HF_API_KEY` – for HF Space deploy
 
 ## Security Headers
 
@@ -42,8 +39,7 @@ The backend applies the following security headers:
 
 ## Authentication
 
-- JWT-based authentication with bcrypt password hashing
-- Tokens expire after 60 minutes (configurable via `ACCESS_TOKEN_EXPIRE_MINUTES`)
+- Public API endpoints do not require login/signup
 - Rate limiting via Redis sliding window (30 requests/minute default)
 
 ## CORS
@@ -54,7 +50,7 @@ The backend applies the following security headers:
 
 ## Data Handling
 
-- Input text is stored in PostgreSQL for audit purposes
+- Recent analysis results are stored in process memory for retrieval by result ID
 - PII is automatically redacted from application logs
 - Text content is hashed (SHA-256) for caching and deduplication
 
@@ -67,5 +63,5 @@ in the GitHub repository. Do not open public issues for security concerns.
 
 - Use dedicated service accounts for each deployment platform
 - Apply principle of least privilege for API keys
-- Enable MFA on all provider accounts (GitHub, Render, Vercel, HF, Groq)
+- Enable MFA on all provider accounts (GitHub, Hugging Face, Vercel, Groq)
 - Review API key permissions quarterly
