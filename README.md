@@ -152,7 +152,3 @@ python -m backend.tests.test_load --url http://localhost:8000 --concurrency 10 -
 - [x] Text submission displays results with signal scores
 - [x] GitHub Actions CI runs tests and builds
 - [x] HF Space sync workflow included
-
-## License
-
-Apache 2.0 – See [LICENSE](LICENSE)
